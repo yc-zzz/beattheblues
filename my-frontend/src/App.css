@@ -1,0 +1,100 @@
+body {
+  margin: 0;
+  padding: 0;
+  color:white;
+  font-family: sans-serif;
+}
+
+h1 {
+  font-size: 100px;
+  text-align: center;
+  margin-top: 13rem;
+  margin-bottom: 0.1rem;
+}
+
+h2 {
+  margin-top: 0.1rem;
+  font-size: 20px;
+  text-align: center;
+}
+
+.my-button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 20px;
+  background-color: #00d084;
+  color: black;
+  cursor: pointer;
+}
+
+.my-button:hover {
+  background-color: #00b574; 
+}
+
+.button-wrapper {
+  text-align: center;
+}
+
+.search-wrapper {
+  text-align: center;
+  margin: 1rem;
+}
+
+.search-input {
+  padding: 0.6rem 1rem;
+  width: 60%;
+  max-width: 400px;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.top-bar {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem; 
+}
+
+.top-link {
+  color: white;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.top-link:hover {
+  color: lightgrey;
+  text-decoration: underline;
+}
+ 
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 3em;
+  right: 0.5rem;
+  background-color: white;
+  color: black;
+  padding: 1rem;
+  padding-top: 0.1rem;
+  border-radius: 10px;
+  width: 190px;
+}
+
+.dropdown-menu input {
+  display: block;
+  margin: 0.4rem;
+  margin-left: 0;
+  margin-top: 0.1rem;
+}
+
+
+
