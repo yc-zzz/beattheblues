@@ -20,6 +20,7 @@ data[['dance', 'acoustic', 'aggressive', 'electronic', 'happy', 'party', 'relaxe
       'sad', 'timbre', 'tonal', 'voice']] = data[['dance', 'acoustic', 'aggressive', 'electronic', 'happy', 'party', 'relaxed',
       'sad', 'timbre', 'tonal', 'voice']].astype(float)
 data.set_index('id', inplace=True)
+data = data[~data.index.duplicated(keep='first')]
 
 # visualisation
 # data.hist(bins=50, figsize=(20,15))
@@ -130,7 +131,7 @@ def cosine_similarity_loss(y_true, y_pred):
     return 1 - tf.reduce_mean(tf.reduce_sum(y_true * y_pred, axis=1))
 
 model_ml.compile(optimizer='adam', loss = cosine_similarity_loss)
-history = model_ml.fit(X_train, y_train, epochs=10, batch_size=20, verbose=2, validation_split = 0.2)
+history = model_ml.fit(X_train, y_train, epochs=10, batch_size=20, verbose=0, validation_split = 0.2)
 
 # 3. Implementation of Obscure Music Algorithm
 user_input = input("Tell us what you like, and we'll give you something obscure.")
