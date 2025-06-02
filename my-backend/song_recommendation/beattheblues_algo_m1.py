@@ -76,7 +76,6 @@ replace_values_mirex = {'cluster1': 'passionate, rousing, confident, boisterous,
                         'cluster3': 'literate, poignant, wistful, bittersweet, autumnal, brooding, ',
                         'cluster4': 'humorous, silly, campy, quirky, whimsical, witty, wry, ',
                         'cluster5': 'aggressive, fiery, anxious, intense, volatile, visceral, '}
-# Correct the .replace calls to modify the data DataFrame in place or reassign
 data['genre'] = data['genre'].replace(replace_values_genre)
 data['mirex'] = data['mirex'].replace(replace_values_mirex)
 data['year'] = data1 # get back the original year
@@ -113,12 +112,11 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 embeddings = model.encode(sentences, batch_size=32)
 
 # 2c. Train ML model to reduce 384D vector to 32D vector
-# Select only the numeric columns from data_num before converting to numpy
+# select only the numeric columns from data_num before converting to numpy
 numeric_cols = data_num.select_dtypes(include=np.number).columns.tolist()
 data_num1 = data_num[numeric_cols].to_numpy()
 X_train, y_train = embeddings, data_num1
 
-# Ensure the last Dense layer has the correct output dimension
 model_ml = Sequential([
     Dense(128),
     LeakyReLU(negative_slope=0.1),
@@ -140,30 +138,30 @@ user_embed = model.encode(user_input).reshape(1, -1) # Reshape for single input 
 pred = model_ml.predict(user_embed)
 
 def obscure_algo(vector, database, data, k=15): # min k = 5
-    # Ensure database is a numpy array of floats
+    # ensure database is a numpy array of floats
     if isinstance(database, pd.DataFrame):
         database = database.select_dtypes(include=np.number).to_numpy()
 
     vector = vector / np.linalg.norm(vector, axis=1, keepdims=True)
     database = database / np.linalg.norm(database, axis=1, keepdims=True)
 
-    # Ensure the dimension for FAISS matches the normalized vectors
+    # ensure the dimension for FAISS matches the normalized vectors
     index = faiss.IndexFlatIP(database.shape[1])
     index.add(database)
     D, I = index.search(vector, k)
     top_k = data.index[I[0]]
 
-    # Handle cases where k is less than 5 or data size is less than 5
+    # handle cases where k is less than 5 or data size is less than 5
     start_index = min(5, len(top_k))
     obscure_recc = top_k[start_index:]
     for id in obscure_recc:
-        if id in data.index: # Check if id exists in original data index
+        if id in data.index: # check if id exists in original data index
             row = data.loc[id]
             yield row['name'], row['artist']
         else:
              print(f"Warning: ID {id} not found in original data.")
 
-# Outputs obscure song 
+# outputs obscure song 
 recommendations = obscure_algo(pred, data_num, data)
 name, artist = next(recommendations)
 print(f"- {name} by {artist}")
