@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
   'http://localhost:3000', 
-  'https://yc-zzz.github.io' 
+  'https://beattheblues.vercel.app/' 
 ];
 
 app.use(cors({
