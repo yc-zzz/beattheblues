@@ -1,12 +1,12 @@
-const mysql = require('mysql2/promise');
+// db.js
+const { Pool } = require('pg');
 require('dotenv').config();
 
-const db = mysql.createPool({
-    host: 'sql12.freesqldatabase.com',
-    user: 'sql12782559',
-    password: 'gdBipnhEqf',
-    database: 'sql12782559',
-    port: 3306,
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // Required for Neon
+  },
 });
 
 module.exports = db;
