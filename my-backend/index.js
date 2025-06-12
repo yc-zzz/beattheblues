@@ -2,15 +2,12 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const db = require('./db');
-//const authRoutes = require('./routes/auth');
-//require('dotenv').config()
-//const bodyParser = require('body-parser')
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
-  'http://localhost:3000', 
-  'https://beattheblues.vercel.app' 
+  'http://localhost:3000',
+  'https://beattheblues.vercel.app'
 ];
 
 app.use(cors({
@@ -25,11 +22,7 @@ app.use(cors({
   credentials: true
 }));
 
-//app.use(bodyParser.json());
-app.use(express.json())
-
-//app.get('/', (req,res) => {res.send('Backend is running');});
-//app.use('./api', authRoutes)
+app.use(express.json());
 
 app.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
@@ -39,19 +32,20 @@ app.post('/register', async (req, res) => {
   }
 
   try {
-    const [existing] = await db.execute(
-      'SELECT * FROM users WHERE username = ? OR email = ?',
+    const result = await db.query(
+      'SELECT * FROM users WHERE username = $1 OR email = $2',
       [username, email]
     );
+    const existing = result.rows;
 
     if (existing.length > 0) {
       return res.status(400).json({ success: false, message: 'Username or email already taken.' });
     }
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.execute(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+    await db.query(
+      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3)',
       [username, email, hashedPassword]
     );
 
@@ -62,19 +56,20 @@ app.post('/register', async (req, res) => {
   }
 });
 
-
-
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const [results] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
+    const result = await db.query(
+      'SELECT * FROM users WHERE username = $1',
+      [username]
+    );
+    const user = result.rows[0];
 
-    if (results.length === 0) {
+    if (!user) {
       return res.status(401).json({ success: false, message: 'User not found.' });
     }
 
-    const user = results[0];
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -88,7 +83,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-
-app.listen(PORT, ()=>{
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
