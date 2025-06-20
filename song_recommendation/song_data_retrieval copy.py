@@ -3,8 +3,8 @@ from pathlib import Path
 import json 
 import psycopg2
 import os 
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import text
+from model_utils import import_credentials
 
 #setting of top-level directory
 parent_dir = Path(__file__).parent
@@ -52,22 +52,29 @@ for file in json_files:
 
 
 df = pd.DataFrame(data)
-print(df.shape) #(97086, 18) -- out of an original 100,000 entries, this is still sufficient.
+
+#set right datatype
+df[['id', 'name', 'artist', 'gender', 'genre', 'mirex']] = df[['id', 'name', 'artist', 'gender', 'genre', 'mirex']].astype(str)
+df[['dance', 'acoustic', 'aggressive', 'electronic', 'happy', 'party', 'relaxed',
+      'sad', 'timbre', 'tonal', 'voice']] = df[['dance', 'acoustic', 'aggressive', 'electronic', 'happy', 'party', 'relaxed',
+      'sad', 'timbre', 'tonal', 'voice']].astype(float)
+df = df.set_index('id')
+df = df[~df.index.duplicated(keep='first')]
+
+#print(df.shape) #(86035, 17) -- out of an original 100,000 entries, this is still sufficient.
 #print(df.isna().sum()) #No missing values in DataFrame! 
-#df.to_csv("sample_data.csv", index=False) -- can be found in GitHub as a back-up, but this will be stored primarily in MySQL
 
-load_dotenv()
-#for storing as sql database via postgresql -- to implement in future iterations 
+#df.to_csv("sample_data.csv", index=False) -- can be found in GitHub as a back-up, but this will be stored primarily in PostgreSQL
 
-try: 
-    db_user = os.environ["DB_USER"]
-    db_password = os.environ["DB_PASSWORD"]
-    db_host = os.environ["DB_HOST"]
-    db_name = os.environ["DB_NAME"]
-except Exception as e: 
-    raise RuntimeError("Missing environment variable: ", e)
+#for storing as sql database via postgresql 
+engine = import_credentials()
+df.to_sql("acousticbrainz_data", engine, if_exists = "replace", index=True, index_label = 'id')
 
-db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}?sslmode=require"
-engine = create_engine(db_url)
-df.to_sql("acousticbrainz_data", engine, if_exists = "replace", index=False)
+with engine.connect() as conn: 
+    conn.execute(text("""
+                 ALTER TABLE acousticbrainz_data
+                 ADD PRIMARY KEY (id);
+                 """))
+    conn.commit()
+
 print("data inserted successfully")

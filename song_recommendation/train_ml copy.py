@@ -1,65 +1,76 @@
 # Libraries
+from model_utils import import_credentials, cosine_similarity_loss
+import psycopg2
+from sqlalchemy import text
 import pandas as pd
 from sentence_transformers import SentenceTransformer #install: pip install -U sentence-transformers
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf 
-from tensorflow import keras
 from keras.models import Sequential
 from keras.layers import Dense, LeakyReLU
-import faiss
 import numpy as np
 
 # 1. Data Preparation
-# load the data
-data = pd.read_csv("sample_data.csv")[:200] # to allow for faster runtime. can remove [:1000] to train on the full dataset.
+#a. load the data
+engine = import_credentials()
+data = pd.read_sql("SELECT * FROM acousticbrainz_data", con=engine, index_col = 'id')[:200] # to allow for faster runtime. can remove [:200] to train on the full dataset.
 
-# convert to appropriate datatypes (str)
-data[['id', 'name', 'artist', 'gender', 'genre', 'mirex']] = data[['id', 'name', 'artist', 'gender', 'genre', 'mirex']].astype(str)
-data[['dance', 'acoustic', 'aggressive', 'electronic', 'happy', 'party', 'relaxed',
-      'sad', 'timbre', 'tonal', 'voice']] = data[['dance', 'acoustic', 'aggressive', 'electronic', 'happy', 'party', 'relaxed',
-      'sad', 'timbre', 'tonal', 'voice']].astype(float)
-data.set_index('id', inplace=True)
-data = data[~data.index.duplicated(keep='first')]
-
-# visualisation
+#b. visualisation
 # data.hist(bins=50, figsize=(20,15))
 # data['year'].hist(bins=200, figsize=(20,15))
-data1 = data['year'].copy() # this will be used later to get original year after standardisation
+#data1 = data['year'].copy() # this will be used later to get original year after standardisation
 # plt.show()
 
 """
 comments: most features have already been normalised into a range of 0 to 1, it is thus already normalised.
 # due to the presence of outliers (e.g one datapoint has year 2082, another has year 0),
-standardisation was preferred over min-max normalisation.
+standardisation was preferred over min-max normalisation for 'year'.
 """
 
+#c. creation of numerical database for cosine similarity comparison.
 # standardisation of year
 standardscaler = StandardScaler()
 df_std = standardscaler.fit_transform(data[['year']])
 df_std = pd.DataFrame(df_std, columns=['year'])
 df_std.index = data.index
-data['year'] = df_std
+data['year_std'] = df_std
 
-# one-hot encoding -- in future iterations, to explore implementing embeddings into genre. but this will do for a POC.
+# one-hot encoding 
 data_num = pd.get_dummies(data, columns = ['gender', 'genre', 'mirex'])
+data_num = data_num.drop(columns=['year']) #data will have 'year', data_num will have 'year_std'
+#print(data_num.dtypes)
+
+numeric_cols = data_num.select_dtypes(include=[np.number, bool]).columns.to_list()
+data_num = data_num[numeric_cols]
 
 # print(data_num.head())
 # print(data_num.shape) #(97086, 32)
 
+data_num.to_sql("song_vector", engine, if_exists='replace', index=True, index_label = 'id')
+
+with engine.connect() as conn: 
+    conn.execute(text("""
+                 ALTER TABLE song_vector
+                 ADD PRIMARY KEY (id);
+                 """))
+    conn.commit()
+
+print("database created")
+
 # 2. Implementation of NLP using user queries
 """
-comments: A dimensionality problem arises. Song vectors are 32D while query vectors are 384D.
+comments: A dimensionality problem arises. Song vectors are 25D while query vectors are 384D.
 
 This would be achieved by implementing the following 4 steps:
 
 2a. Generate synthetic text for each song via bootstrapping (future iterations may use HuggingFace's T5 models to refine the text)
 2b. Run data through SentenceTransformers to get a 384D vector
-2c. Train ML Deep Learning Model (on a reduced sample size) to reduce 384D to 32D -- outputs predicted 32D vector.
-2d. Optimise Deep Learning Model using Cosine Similarity as loss function (compare predicted and actual 32D vector)
+2c. Train ML Deep Learning Model (on a reduced sample size) to reduce 384D to 25D -- outputs predicted 25D vector.
+2d. Optimise Deep Learning Model using Cosine Similarity as loss function (compare predicted and actual 25D vector)
 
-It makes more sense to map 384D to 32D rather than the other way around
-as "ground truth" exists within the 32D space (song data).
+It makes more sense to map 384D to 25D rather than the other way around
+as "ground truth" exists within the 25D space (song data).
 
 Also note that the distinction between data and data_num was intentional.
 data_num contains numerical data with one-hot encoding of genre and mirex.
@@ -79,7 +90,6 @@ replace_values_mirex = {'cluster1': 'passionate, rousing, confident, boisterous,
                         'cluster5': 'aggressive, fiery, anxious, intense, volatile, visceral, '}
 data['genre'] = data['genre'].replace(replace_values_genre)
 data['mirex'] = data['mirex'].replace(replace_values_mirex)
-data['year'] = data1 # get back the original year
 
 # generate bootstrapped song description
 def generate_description(song):
@@ -96,7 +106,7 @@ def generate_description(song):
         elif 0.5 <= value < 0.75:
             description += "quite "
         else:
-            description += "very "
+            description += "extremely "
         description += str(col) + ","
     if song['voice'] < 0.5:
         description += "instrumental"
@@ -112,34 +122,40 @@ for idx, song in data.iterrows():
 model = SentenceTransformer('all-MiniLM-L6-v2')
 embeddings = model.encode(sentences, batch_size=32)
 
-# 2c. Train ML model to reduce 384D vector to 32D vector
+# 2c. Train ML model to reduce 384D vector to 25D vector
 # select only the numeric columns from data_num before converting to numpy
-numeric_cols = data_num.select_dtypes(include=np.number).columns.tolist()
-data_num1 = data_num[numeric_cols].to_numpy()
-X_train, y_train = embeddings, data_num1
+data_num1 = pd.read_sql("SELECT * FROM song_vector", con = engine, index_col = 'id')
+data_num1 = data_num1.to_numpy()
 
+#assign each embedding with a "ground truth" in y_train (supervised learning)
+X_train, y_train = embeddings, data_num1.astype(float)
+
+#train model
 model_ml = Sequential([
     Dense(128),
     LeakyReLU(negative_slope=0.1),
     Dense(64, activation='relu'),
-    Dense(data_num1.shape[1])]) 
+    Dense(data_num1.shape[1])]) #corresponds to the feature space of song data
 
 # 2d. Optimise model using cosine similarity as loss function
-def cosine_similarity_loss(y_true, y_pred):
-    y_true = tf.nn.l2_normalize(tf.cast(y_true, tf.float32), axis=1) # Cast y_true to float32
-    y_pred = tf.nn.l2_normalize(tf.cast(y_pred, tf.float32), axis=1) # Cast y_pred to float32
-    return 1 - tf.reduce_mean(tf.reduce_sum(y_true * y_pred, axis=1))
+def train_model(): 
+    model_ml.compile(optimizer='adam', loss = cosine_similarity_loss)
+    history = model_ml.fit(X_train, y_train, epochs=10, batch_size=20, verbose=0, validation_split = 0.2)
+    model_ml.save('ml_vector_reduction.keras')
 
-model_ml.compile(optimizer='adam', loss = cosine_similarity_loss)
-history = model_ml.fit(X_train, y_train, epochs=10, batch_size=20, verbose=0, validation_split = 0.2)
+if __name__ == '__main__': 
+    train_model()
 
+print("model trained")
+
+"""
 # 3. Implementation of Obscure Music Algorithm
 user_input = input("Tell us what you like, and we'll give you something obscure.")
 user_embed = model.encode(user_input).reshape(1, -1) # Reshape for single input prediction
 pred = model_ml.predict(user_embed)
 
 def obscure_algo(vector, database, data, k=15): # min k = 5
-    # ensure database is a numpy array of floats
+    # ensure database is a numpy array of floats -- for numpy operations
     if isinstance(database, pd.DataFrame):
         database = database.select_dtypes(include=np.number).to_numpy()
 
@@ -166,3 +182,8 @@ def obscure_algo(vector, database, data, k=15): # min k = 5
 recommendations = obscure_algo(pred, data_num, data)
 name, artist = next(recommendations)
 print(f"- {name} by {artist}")
+"""
+
+"""
+takes in database from sql, returns numeric database (to sql) for cosine similarity comparison & trained model weights
+"""
