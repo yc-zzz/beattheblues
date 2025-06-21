@@ -9,5 +9,5 @@ python-dotenv==1.1.0
 scikit_learn==1.7.0
 sentence_transformers==4.1.0
 SQLAlchemy==2.0.41
-tensorflow==2.15.0
+tensorflow==2.19.0
 tf-keras==2.19.0
