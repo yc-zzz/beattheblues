@@ -25,7 +25,7 @@ function SignInDropdown({onClose, onLoginSuccess}: {onClose:()=>void; onLoginSuc
     console.log('Login form submitted'); 
     
     try{
-      const response = await fetch('http://localhost:5000/login',{
+      const response = await fetch('https://beattheblues.onrender.com/login',{
         method:'POST',
         headers:{
           'Content-Type':'application/json',
@@ -54,7 +54,7 @@ function SignInDropdown({onClose, onLoginSuccess}: {onClose:()=>void; onLoginSuc
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/register', {
+      const response = await fetch('https://beattheblues.onrender.com/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -142,7 +142,7 @@ function RegisterForm() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5000/register', {
+      const response = await fetch('https://beattheblues.onrender.com/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),

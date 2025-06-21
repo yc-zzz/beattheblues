@@ -1,0 +1,12 @@
+pandas
+numpy
+scikit-learn
+matplotlib
+tensorflow
+keras
+sentence-transformers
+faiss-cpu
+psycopg2-binary
+sqlalchemy
+python-dotenv
+flask

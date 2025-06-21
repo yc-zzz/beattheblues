@@ -1,0 +1,2 @@
+*.zip filter=lfs diff=lfs merge=lfs -text
+/Users/timotheusteng/Desktop/Orbital/beattheblues/my-backend/song_database/acousticbrainz-highlevel-sample-json-20220623.zip filter=lfs diff=lfs merge=lfs -text
