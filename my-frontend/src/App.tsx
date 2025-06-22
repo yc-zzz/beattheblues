@@ -1,6 +1,15 @@
 import React, {useState} from 'react';
 import './App.css';
 import defaultProfile from './profile-icon-png-898.png';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import Profile from './profile';
+
+
+<Router>
+  <Routes>
+    <Route path="/profile" element={<Profile />} />
+  </Routes>
+</Router>
 
 function MyButton() {
   return (
@@ -186,37 +195,38 @@ function RegisterForm() {
 }
 
 function App() {
-
-  const [showDropDown, setShowDropDown] = React.useState(false);
+  const [showDropDown, setShowDropDown] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
 
-  const handleLoginSuccess = (user:string)=>{
+  const handleLoginSuccess = (user: string) => {
     setIsLoggedIn(true);
     setUsername(user);
   };
-  const handleLogout = ()=> {
+
+  const handleLogout = () => {
     setIsLoggedIn(false);
     setUsername('');
     setShowDropDown(false);
   };
 
   return (
-    <div>
+    <Router>
       <div className='top-bar'>
         <a href="#" className='top-link'> Playlist </a>
-        <a href="#" className='top-link'> Profile </a>
-        <img 
+        <Link to="/profile" className="top-link">Profile</Link>
+        <img
           src={defaultProfile}
           className='profile-icon'
           alt='Profile'
-          onClick={()=>setShowDropDown(prev=>!prev)}
+          onClick={() => setShowDropDown(prev => !prev)}
         />
 
         {showDropDown && !isLoggedIn && (
-          <SignInDropdown 
-          onClose={()=>setShowDropDown(false)}
-          onLoginSuccess={handleLoginSuccess}/>
+          <SignInDropdown
+            onClose={() => setShowDropDown(false)}
+            onLoginSuccess={handleLoginSuccess}
+          />
         )}
 
         {showDropDown && isLoggedIn && (
@@ -226,15 +236,23 @@ function App() {
           </div>
         )}
       </div>
-      
-      <h1>beat the blues&#119070;</h1>
-      <h2>What are you vibing to today?</h2>
-      <div className='search-wrapper'>
-        <input type = 'text' placeholder='Type a keyword, like an artist, genre, mood...' className='search-input'/>
-      </div>
-      <div className='button-wrapper'><MyButton /></div>
-    </div>
+
+      <Routes>
+        <Route path="/" element={
+          <>
+            <h1>beat the blues&#119070;</h1>
+            <h2>What are you vibing to today?</h2>
+            <div className='search-wrapper'>
+              <input type='text' placeholder='Type a keyword, like an artist, genre, mood...' className='search-input' />
+            </div>
+            <div className='button-wrapper'><MyButton /></div>
+          </>
+        } />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </Router>
   );
 }
+
 
 export default App;
