@@ -1,5 +1,6 @@
 from predict_ml import Recommendation 
 from flask import Flask, request, jsonify
+import os
 
 #Initialise Flask App
 app = Flask(__name__)
@@ -19,5 +20,6 @@ def recommend():
     return jsonify({'recommendation': result})
 
 if __name__ == '__main__': 
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))  # Render will set PORT automatically
+    app.run(host="0.0.0.0", port=port)
 
