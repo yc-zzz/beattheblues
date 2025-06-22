@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: beat-the-blues-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python flask_app.py
+    pythonVersion: 3.10.13
