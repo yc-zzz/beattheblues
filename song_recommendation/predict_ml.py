@@ -2,23 +2,23 @@
 from model_utils import import_credentials, cosine_similarity_loss
 import pandas as pd
 from sentence_transformers import SentenceTransformer #install: pip install -U sentence-transformers
-from tensorflow import keras
-from keras.models import load_model
+#from tensorflow import keras
+#from keras.models import load_model
 import faiss
 import numpy as np
 
 recommender = None  # Global but uninitialized
 
-print("✅ predict_ml.py has been imported")
+print("predict_ml.py has been imported")
 
 def get_recommender():
-    print("⚡ get_recommender() was called")
+    print("get_recommender() was called")
     global recommender
     if recommender is None:
-        print("🧠 Instantiating Recommendation()")
+        print("Instantiating Recommendation()")
         recommender = Recommendation()
     if not recommender.loaded:
-        print("📦 Loading model...")
+        print("Loading model...")
         recommender.load()
     return recommender
 
@@ -46,6 +46,9 @@ class Recommendation:
         if self.loaded:
             return
         print("Loading ML model and data...")
+
+        from tensorflow import keras
+        from keras.models import load_model
         self.engine = import_credentials()
         self.ml_model = load_model('ml_vector_reduction.keras', custom_objects = {"cosine_similarity_loss": cosine_similarity_loss})
         self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col='id')
