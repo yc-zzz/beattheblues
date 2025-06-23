@@ -9,6 +9,10 @@ app = Flask(__name__)
 #Allows for querying multiple times while model is only trained once
 #recommendation = Recommendation()
 
+@app.route('/')
+def health():
+    return 'Beat the Blues Flask API is live!'
+
 @app.route('/recommend', methods=['POST'])
 def recommend(): 
     data = request.get_json()
