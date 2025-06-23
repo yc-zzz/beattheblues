@@ -9,11 +9,16 @@ import numpy as np
 
 recommender = None  # Global but uninitialized
 
+print("✅ predict_ml.py has been imported")
+
 def get_recommender():
+    print("⚡ get_recommender() was called")
     global recommender
     if recommender is None:
+        print("🧠 Instantiating Recommendation()")
         recommender = Recommendation()
     if not recommender.loaded:
+        print("📦 Loading model...")
         recommender.load()
     return recommender
 
@@ -40,7 +45,7 @@ class Recommendation:
     def load(self):
         if self.loaded:
             return
-        print("🧠 Loading ML model and data...")
+        print("Loading ML model and data...")
         self.engine = import_credentials()
         self.ml_model = load_model('ml_vector_reduction.keras', custom_objects = {"cosine_similarity_loss": cosine_similarity_loss})
         self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col='id')
