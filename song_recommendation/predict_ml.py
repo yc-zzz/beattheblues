@@ -12,12 +12,23 @@ recommender = None  # Global but uninitialized
 def get_recommender():
     global recommender
     if recommender is None:
-        recommender = Recommendation()  
+        recommender = Recommendation()
+    if not recommender.loaded:
+        recommender.load()
     return recommender
 
 # Implementation of Obscure Music Algorithm (using OOP) 
 class Recommendation: 
-    def __init__(self): 
+    def __init__(self):
+        self.engine = None
+        self.ml_model = None
+        self.num_data_df = None
+        self.num_data = None
+        self.nlp_model = None
+        self.current_query = None
+        self.current_result = None
+        self.loaded = False
+        '''
         self.engine = import_credentials()
         self.ml_model = load_model('ml_vector_reduction.keras', custom_objects = {"cosine_similarity_loss": cosine_similarity_loss})
         self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col = 'id')
@@ -25,6 +36,17 @@ class Recommendation:
         self.nlp_model = SentenceTransformer('all-MiniLM-L6-v2')
         self.current_query = None
         self.current_result = None 
+        ''' 
+    def load(self):
+        if self.loaded:
+            return
+        print("🧠 Loading ML model and data...")
+        self.engine = import_credentials()
+        self.ml_model = load_model('ml_vector_reduction.keras', custom_objects = {"cosine_similarity_loss": cosine_similarity_loss})
+        self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col='id')
+        self.num_data = self.num_data_df.to_numpy().astype(float)
+        self.nlp_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.loaded = True
 
     def generate_25d_vector(self, query):
         self.current_query = query
