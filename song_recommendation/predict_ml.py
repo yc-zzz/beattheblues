@@ -1,7 +1,7 @@
 # Libraries
 from model_utils import import_credentials, cosine_similarity_loss
 import pandas as pd
-from sentence_transformers import SentenceTransformer #install: pip install -U sentence-transformers
+#from sentence_transformers import SentenceTransformer #install: pip install -U sentence-transformers
 #from tensorflow import keras
 #from keras.models import load_model
 import faiss
@@ -49,6 +49,8 @@ class Recommendation:
 
         from tensorflow import keras
         from keras.models import load_model
+        from sentence_transformers import SentenceTransformer
+        
         self.engine = import_credentials()
         self.ml_model = load_model('ml_vector_reduction.keras', custom_objects = {"cosine_similarity_loss": cosine_similarity_loss})
         self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col='id')
