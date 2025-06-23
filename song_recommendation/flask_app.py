@@ -18,3 +18,7 @@ def recommend():
     result = recommendation.song_recommendation(user_query)
     return jsonify({'recommendation': result})
 
+if _name_ == "_main_":
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0",port=port)
