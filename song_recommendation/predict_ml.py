@@ -7,6 +7,14 @@ from keras.models import load_model
 import faiss
 import numpy as np
 
+recommender = None  # Global but uninitialized
+
+def get_recommender():
+    global recommender
+    if recommender is None:
+        recommender = Recommendation()  
+    return recommender
+
 # Implementation of Obscure Music Algorithm (using OOP) 
 class Recommendation: 
     def __init__(self): 
@@ -66,8 +74,7 @@ class Recommendation:
             return self.song_generation(query)
             
 #glo
-recommender = Recommendation()
+#recommender = Recommendation()
 
-
-query = input("Tell us what you like, and we'll give you something obscure.")
-print(recommender.song_recommendation(query))
+#query = input("Tell us what you like, and we'll give you something obscure.")
+#print(recommender.song_recommendation(query))

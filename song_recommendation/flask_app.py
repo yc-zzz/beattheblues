@@ -1,4 +1,4 @@
-#from predict_ml import Recommendation 
+from predict_ml import get_recommender
 from flask import Flask, request, jsonify
 import os
 
@@ -9,23 +9,13 @@ app = Flask(__name__)
 #Allows for querying multiple times while model is only trained once
 #recommendation = Recommendation()
 
-@app.route('/')
-def home():
-    return "Hello from Flask!"
-
 @app.route('/recommend', methods=['POST'])
 def recommend(): 
-    return jsonify({'recommendation': 'test track by test artist'})
-    '''
     data = request.get_json()
     user_query = data.get('query')
     if not user_query: 
         return jsonify({"Error": "No query provided"}), 400
     
-    result = recommendation.song_recommendation(user_query)
+    recommender = get_recommender()
+    result = recommender.song_recommendation(user_query)
     return jsonify({'recommendation': result})
-    '''
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0",port=port)
