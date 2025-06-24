@@ -1,4 +1,4 @@
-from predict_ml import get_recommender
+#from predict_ml import get_recommender
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
@@ -25,7 +25,7 @@ def health():
 
 @app.route('/recommend', methods=['POST'])
 def recommend():
-    print("✅ /recommend hit")
+    print("/recommend hit")
     return jsonify({'recommendation': 'test successful'})
 '''
 def recommend(): 
