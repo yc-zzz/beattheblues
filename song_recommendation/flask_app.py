@@ -5,10 +5,15 @@ import os
 
 #Initialise Flask App
 app = Flask(__name__)
-CORS(app, origins=[
-    "http://localhost:3000",
-    "https://beattheblues.vercel.app"
-])
+CORS(app,
+     origins=[
+         "http://localhost:3000",
+         "https://beattheblues.vercel.app"
+     ],
+     supports_credentials=True,
+     allow_headers=["Content-Type"],
+     methods=["GET", "POST", "OPTIONS"]
+)
 
 #Global calling of recommendation, to prevent unnecessary loading of models
 #Allows for querying multiple times while model is only trained once
