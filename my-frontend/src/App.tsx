@@ -28,7 +28,7 @@ function SignInDropdown({onClose, onLoginSuccess}: {onClose:()=>void; onLoginSuc
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regMessage, setRegMessage] = useState('');
-
+ 
   const handleLogin = async (e:React.FormEvent)=>{
     e.preventDefault();
     console.log('Login form submitted'); 
@@ -198,7 +198,26 @@ function App() {
   const [showDropDown, setShowDropDown] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
+  const [query, setQuery] = useState('');
+  const [recommendation, setRecommendation] = useState('');
 
+  const handleSearch = async () => {
+    try {
+      const response = await fetch('https://beattheblues-reco.onrender.com/recommend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query })
+      });
+
+      const data = await response.json();
+      setRecommendation(data.recommendation || 'No result');
+    } catch (error) {
+      console.error('Error fetching recommendation:', error);
+      setRecommendation('Something went wrong.');
+    }
+  };
   const handleLoginSuccess = (user: string) => {
     setIsLoggedIn(true);
     setUsername(user);
@@ -243,9 +262,21 @@ function App() {
             <h1>beat the blues&#119070;</h1>
             <h2>What are you vibing to today?</h2>
             <div className='search-wrapper'>
-              <input type='text' placeholder='Type a keyword, like an artist, genre, mood...' className='search-input' />
+              <input
+                type="text"
+                placeholder="Type a keyword, like an artist, genre, mood..."
+                className="search-input"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                  handleSearch();
+                  }
+                }}
+              />
             </div>
             <div className='button-wrapper'><MyButton /></div>
+            {recommendation && <p className="recommendation-result">{recommendation}</p>}
           </>
         } />
         <Route path="/profile" element={<Profile />} />
