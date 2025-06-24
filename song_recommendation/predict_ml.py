@@ -43,6 +43,8 @@ class Recommendation:
         self.current_result = None 
         ''' 
     def load(self):
+        import os
+        os.environ["TRANSFORMERS_CACHE"] = "/tmp"
         if self.loaded:
             return
         print("Loading ML model and data...")
@@ -55,7 +57,7 @@ class Recommendation:
         self.ml_model = load_model('ml_vector_reduction.keras', custom_objects = {"cosine_similarity_loss": cosine_similarity_loss})
         self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col='id')
         self.num_data = self.num_data_df.to_numpy().astype(float)
-        self.nlp_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.nlp_model = SentenceTransformer('paraphrase-MiniLM-L3-v2')
         self.loaded = True
 
     def generate_25d_vector(self, query):
