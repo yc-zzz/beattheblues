@@ -1,9 +1,11 @@
 from predict_ml import get_recommender
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
 
 #Initialise Flask App
 app = Flask(__name__)
+CORS(app)
 
 #Global calling of recommendation, to prevent unnecessary loading of models
 #Allows for querying multiple times while model is only trained once

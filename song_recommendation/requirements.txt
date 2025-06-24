@@ -12,3 +12,4 @@ SQLAlchemy==2.0.41
 tensorflow==2.19.0
 tf-keras==2.19.0
 gunicorn
+flask-cors
