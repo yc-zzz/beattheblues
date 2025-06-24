@@ -24,6 +24,10 @@ def health():
     return 'Beat the Blues Flask API is live!'
 
 @app.route('/recommend', methods=['POST'])
+def recommend():
+    print("✅ /recommend hit")
+    return jsonify({'recommendation': 'test successful'})
+'''
 def recommend(): 
     data = request.get_json()
     user_query = data.get('query')
@@ -33,3 +37,4 @@ def recommend():
     recommender = get_recommender()
     result = recommender.song_recommendation(user_query)
     return jsonify({'recommendation': result})
+'''
