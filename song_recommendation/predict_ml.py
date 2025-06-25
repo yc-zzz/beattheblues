@@ -44,7 +44,8 @@ class Recommendation:
         ''' 
     def load(self):
         import os
-        os.environ["TRANSFORMERS_CACHE"] = "/tmp"
+        os.environ["HF_HOME"] = "/tmp" #Prevent memory spikes by disabling SentenceTransformer's cache
+
         if self.loaded:
             return
         print("Loading ML model and data...")
