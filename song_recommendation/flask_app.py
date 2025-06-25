@@ -3,6 +3,13 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 
+try:
+    from predict_ml import get_recommender
+    print("predict_ml imported successfully")
+except Exception as e:
+    print("predict_ml import failed:", e)
+    get_recommender = None
+
 #Initialise Flask App
 app = Flask(__name__)
 CORS(app,
