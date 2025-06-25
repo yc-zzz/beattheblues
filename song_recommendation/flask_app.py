@@ -33,7 +33,24 @@ def health():
 @app.route('/recommend', methods=['POST'])
 def recommend():
     print("/recommend hit")
-    return jsonify({'recommendation': 'test successful'})
+    if get_recommender is None:
+        return jsonify({'error': 'Recommender not available'}), 500
+
+    try:
+        data = request.get_json()
+        user_query = data.get('query')
+        if not user_query:
+            return jsonify({"error": "No query provided"}), 400
+
+        recommender = get_recommender()
+        result = recommender.song_recommendation(user_query)
+
+        return jsonify({'recommendation': result})
+    
+    except Exception as e:
+        print("Recommendation error:", e)
+        return jsonify({'error': str(e)}), 500
+    
 '''
 def recommend(): 
     data = request.get_json()
