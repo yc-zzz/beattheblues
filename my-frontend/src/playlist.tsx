@@ -1,7 +1,7 @@
 import React from 'react';
-import './profile.css';
+import './playlist.css';
 
-const Profile = () => {
+const Playlist = () => {
   const username = localStorage.getItem('username');
 
   return (
@@ -16,4 +16,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default Playlist;

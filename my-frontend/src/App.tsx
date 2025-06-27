@@ -266,7 +266,36 @@ function App() {
               />
             </div>
             <div className='button-wrapper'><MyButton /></div>
-            {recommendation && <p className="recommendation-result">{recommendation}</p>}
+            {recommendation && (
+              <div className="recommendation-result">
+                <p>{recommendation}</p>
+                {isLoggedIn && (
+                  <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('https://beattheblues.onrender.com/playlist', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          username: username,
+                          song: recommendation
+                        })
+                      });
+                      const data = await response.json();
+                      alert(data.message);
+                    } catch (err) {
+                      alert('Failed to save song');
+                      console.error(err);
+                    }
+                  }}
+                  >
+                    Add to playlist
+                    </button>
+                  )}
+                  </div>
+                )}
           </>
         } />
         <Route path="/profile" element={<Profile />} />
