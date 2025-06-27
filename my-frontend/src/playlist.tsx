@@ -9,9 +9,9 @@ const Profile = () => {
       <h2>Welcome, {username ? username : 'Guest'}!</h2>
       {username ? 
       (<p>
-        This is your profile page.
+        This is your playlist page.
         </p>) : 
-      (<p>Please log in to view your profile.</p>)}
+      (<p>Please log in to view your playlist.</p>)}
     </div>
   );
 };

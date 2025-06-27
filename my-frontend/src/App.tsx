@@ -1,40 +1,42 @@
+//react imports
 import React, {useState} from 'react';
+import { useEffect } from 'react';
+//css and assets
 import './App.css';
 import defaultProfile from './profile-icon-png-898.png';
+//routes for navigation
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+//other pages
 import Profile from './profile';
+import Playlist from './playlist';
 
-
-<Router>
-  <Routes>
-    <Route path="/profile" element={<Profile />} />
-  </Routes>
-</Router>
-
+//it's a button, does button things
 function MyButton() {
   return (
     <button className='my-button'>I'm feeling adventurous!</button>
   );
 }
 
+//dropdown form for logging in and registering 
 function SignInDropdown({onClose, onLoginSuccess}: {onClose:()=>void; onLoginSuccess:(username:string)=> void}){
-  const [showRegister, setShowRegister] = useState(false);
-
+  //login form state
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  
+  //registration form state
+  const [showRegister, setShowRegister] = useState(false);
   const [regUsername, setRegUsername] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regMessage, setRegMessage] = useState('');
- 
+
+  //handle login form submission
   const handleLogin = async (e:React.FormEvent)=>{
     e.preventDefault();
     console.log('Login form submitted'); 
-    
+
     try{
-      const response = await fetch('https://beattheblues.onrender.com/login',{
+      const response = await fetch('https://beattheblues.onrender.com/login',{ //fetching from backend
         method:'POST',
         headers:{
           'Content-Type':'application/json',
@@ -43,12 +45,10 @@ function SignInDropdown({onClose, onLoginSuccess}: {onClose:()=>void; onLoginSuc
       });
 
       const data = await response.json();
-      console.log('Server response:', data);
-
+      //console.log('Server response:', data);
       if(data.success){
         setMessage(`Welcome, ${data.username}!`);
-        onLoginSuccess(data.username);
-        //onClose();
+        onLoginSuccess(data.username); 
       }
       else {
         setMessage(data.message);
@@ -60,6 +60,7 @@ function SignInDropdown({onClose, onLoginSuccess}: {onClose:()=>void; onLoginSuc
     }
   };
 
+  //handle registration form submission
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -80,6 +81,7 @@ function SignInDropdown({onClose, onLoginSuccess}: {onClose:()=>void; onLoginSuc
     }
   };
 
+  //rendering of login and registration form
   return(
     <div className="dropdown-menu">
       {showRegister ? (
@@ -141,66 +143,26 @@ function SignInDropdown({onClose, onLoginSuccess}: {onClose:()=>void; onLoginSuc
   );
 }
 
-function RegisterForm() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const response = await fetch('https://beattheblues.onrender.com/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      const data = await response.json();
-      setMessage(data.message);
-    } catch (error) {
-      console.error('Registration error:', error);
-      setMessage('Something went wrong.');
-    }
-  };
-
-  return (
-    <div className="dropdown-menu">
-      <form onSubmit={handleRegister}>
-        <h3>Register</h3>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
-        <button type="submit">Sign Up</button>
-        {message && <p>{message}</p>}
-      </form>
-    </div>
-  );
-}
-
 function App() {
+  //UI state
   const [showDropDown, setShowDropDown] = useState(false);
+  //login state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
+  //search and recommendation state
   const [query, setQuery] = useState('');
   const [recommendation, setRecommendation] = useState('');
 
+  //restore login state from local storage (helps to keep track of login status in other pages)
+  useEffect(() => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+      setIsLoggedIn(true);
+      setUsername(storedUsername);
+    }
+  }, []);
+
+  //send search query to backend for song reco
   const handleSearch = async () => {
     try {
       const response = await fetch('https://beattheblues-reco.onrender.com/recommend', {
@@ -210,7 +172,6 @@ function App() {
         },
         body: JSON.stringify({ query })
       });
-
       const data = await response.json();
       setRecommendation(data.recommendation || 'No result');
     } catch (error) {
@@ -218,22 +179,51 @@ function App() {
       setRecommendation('Something went wrong.');
     }
   };
+  //called for successful login
   const handleLoginSuccess = (user: string) => {
     setIsLoggedIn(true);
     setUsername(user);
+    localStorage.setItem('username', user); 
   };
-
+  //called for logout
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUsername('');
+    localStorage.removeItem('username'); // clear on logout
     setShowDropDown(false);
   };
 
   return (
-    <Router>
+    <Router> 
       <div className='top-bar'>
-        <a href="#" className='top-link'> Playlist </a>
-        <Link to="/profile" className="top-link">Profile</Link>
+        <a
+          href="#"
+          className="top-link"
+          onClick={(e) => {
+            if (!isLoggedIn) {
+              e.preventDefault();
+              setShowDropDown(true);
+            } else {
+              window.location.href = '/playlist';
+            }
+          }}
+        >
+          Playlist
+          </a>
+        <a
+          href="#"
+          className="top-link"
+          onClick={(e) => {
+            if (!isLoggedIn) {
+              e.preventDefault();
+              setShowDropDown(true);
+            } else {
+              window.location.href = '/profile';
+            }
+          }}
+        >
+          Profile
+        </a>
         <img
           src={defaultProfile}
           className='profile-icon'
@@ -280,6 +270,7 @@ function App() {
           </>
         } />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/playlist" element={<Playlist />} />
       </Routes>
     </Router>
   );
