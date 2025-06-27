@@ -106,3 +106,35 @@ app.post('/playlist', async (req, res) => {
   }
 });
 
+app.get('/playlist', async (req, res) => {
+  const username = req.query.user;
+
+  if (!username) {
+    return res.status(400).json({ message: 'Username required' });
+  }
+
+  try {
+    const result = await db.query(
+      'SELECT id, song, added_at FROM playlist WHERE username = $1 ORDER BY added_at DESC',
+      [username]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Failed to fetch playlist:', err);
+    res.status(500).json({ message: 'Failed to fetch playlist' });
+  }
+});
+
+app.delete('/playlist/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await db.query('DELETE FROM playlist WHERE id = $1', [id]);
+    res.json({ message: 'Song removed' });
+  } catch (err) {
+    console.error('Failed to delete song:', err);
+    res.status(500).json({ message: 'Failed to delete song' });
+  }
+});
+
+
