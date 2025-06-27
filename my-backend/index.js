@@ -86,3 +86,23 @@ app.post('/login', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+app.post('/playlist', async (req, res) => {
+  const { username, song } = req.body;
+
+  if (!username || !song) {
+    return res.status(400).json({ message: 'Missing data' });
+  }
+
+  try {
+    await db.query(
+      'INSERT INTO playlist (username, song) VALUES ($1, $2)',
+      [username, song]
+    );
+    res.json({ message: 'Song saved to playlist!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error saving song' });
+  }
+});
+
