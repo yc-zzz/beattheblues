@@ -4,6 +4,9 @@ import { useEffect } from 'react';
 //css and assets
 import './App.css';
 import defaultProfile from './profile-icon-png-898.png';
+import youtubelogo from './youtube_logo.png'
+import spotifylogo from './spotify.png'
+import googlelogo from './google.png'
 //routes for navigation
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 //other pages
@@ -294,8 +297,32 @@ function App() {
                     Add to playlist
                     </button>
                   )}
+                  
+                  <div className="search-buttons">
+                    <a
+                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(recommendation)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >
+                      <img src={youtubelogo} alt="YouTube" className="search-icon" />
+                    </a>
+                    <a
+                    href={`https://open.spotify.com/search/${encodeURIComponent(recommendation)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >
+                      <img src={spotifylogo} alt="Spotify" className="search-icon" />
+                    </a>
+                    <a
+                    href={`https://www.google.com/search?q=${encodeURIComponent(recommendation)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >
+                      <img src={googlelogo} alt="Google" className="search-icon" />
+                    </a>
                   </div>
-                )}
+                </div>
+              )}
           </>
         } />
         <Route path="/profile" element={<Profile />} />
