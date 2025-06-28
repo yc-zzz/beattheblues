@@ -96,7 +96,7 @@ h2 {
   margin-top: 0.1rem;
 }
 
-.recommendation-result {
+.reco-result {
   text-align: center;
   margin-top: 20px;
   font-size: 1.2rem;
@@ -120,4 +120,8 @@ h2 {
   transform: scale(1.1);
 }
 
+.add-button-wrapper {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
 

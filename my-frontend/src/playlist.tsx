@@ -42,6 +42,7 @@ const Playlist = () => {
   }
 
   return (
+  <>
     <div style={{ textAlign: 'center', padding: '2rem' }}>
       <h2>Your Playlist</h2>
       {loading ? (
@@ -72,7 +73,11 @@ const Playlist = () => {
         </ul>
       )}
     </div>
-  );
+
+    <a href="/" className="home-link">Return to Home</a>
+  </>
+);
+
 };
 
 export default Playlist;

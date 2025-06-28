@@ -14,3 +14,22 @@ h2 {
   text-align: center;
   font-family: sans-serif;
 }
+
+.home-link {
+  position: fixed;
+  bottom: 1rem;
+  left: 2rem;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #00d084;
+  text-decoration: none;
+  background: transparent;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: color 0.2s ease;
+}
+
+.home-link:hover {
+  color: #00b574;
+  text-decoration: underline;
+}

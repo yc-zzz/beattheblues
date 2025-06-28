@@ -12,6 +12,7 @@ const Profile = () => {
         This is your profile page.
         </p>) : 
       (<p>Please log in to view your profile.</p>)}
+      <a href="/" className="home-link">Return to Home</a>
     </div>
   );
 };
