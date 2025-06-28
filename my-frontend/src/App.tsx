@@ -6,8 +6,8 @@ import spotifylogo from './pics/spotify.png';
 import googlelogo from './pics/google.png';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SigninForm from './components/signinform';
-import Profile from './profile';
-import Playlist from './playlist';
+import Profile from './pages/profile';
+import Playlist from './pages/playlist';
 
 function MyButton() {
   return <button className='my-button'>I'm feeling adventurous!</button>;
