@@ -14,7 +14,7 @@ import numpy as np
 # 1. Data Preparation
 #a. load the data
 engine = import_credentials()
-data = pd.read_sql("SELECT * FROM acousticbrainz_data", con=engine, index_col = 'id')[:200] # to allow for faster runtime. can remove [:200] to train on the full dataset.
+data = pd.read_sql("SELECT * FROM acousticbrainz_data", con=engine, index_col = 'id') 
 
 #b. visualisation
 # data.hist(bins=50, figsize=(20,15))

@@ -28,7 +28,7 @@ function App() {
     }
   }, []);
 
-  const search_handle = async()=>{
+  const search_handle = async() => {
     try {
       const response = await fetch('https://beattheblues-reco.onrender.com/recommend', {
         method: 'POST',
@@ -56,7 +56,7 @@ function App() {
     set_popup(false);
   };
 
-  const playlist_add = async ()=>{
+  const playlist_add = async () => {
     try {
       const response = await fetch('https://beattheblues.onrender.com/playlist', {
         method: 'POST',
