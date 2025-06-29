@@ -9,8 +9,8 @@ import SigninForm from './components/signinform';
 import Profile from './pages/profile';
 import Playlist from './pages/playlist';
 
-function MyButton() {
-  return <button className='my-button'>I'm feeling adventurous!</button>;
+function MyButton({ onClick }:{onClick: () => void }) {
+  return <button className='my-button' onClick={onClick}>I'm feeling adventurous!</button>;
 }
 
 function App() {
@@ -19,6 +19,7 @@ function App() {
   const [username, set_user] = useState('');
   const [query, set_query] = useState('');
   const [recommendation, set_reco] = useState('');
+  const [valid_reco, set_reco_validity] = useState(false)
 
   useEffect( () => {
     const stored_user = localStorage.getItem('username');
@@ -37,6 +38,7 @@ function App() {
       });
       const data = await response.json();
       set_reco(data.recommendation || 'No result, try another prompt?'); //sometimes first try lead to no result, will try to track down why
+      set_reco_validity(!!data.recommendation); //TIL !! force it to become boolean, pretty cool
     } catch (err) {
       console.error('Error fetching recomendation:', err);
       set_reco('Cannot fetch recommendation, try again later.');
@@ -93,20 +95,24 @@ function App() {
     reco_stuffs = (
       <div className="recommendation-result">
         <p>{recommendation}</p>
-        <div className="search-buttons">
-          <a href={`https://www.youtube.com/results?search_query=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
-            <img src={youtubelogo} alt="YouTube" className="search-icon" />
-          </a>
-          <a href={`https://open.spotify.com/search/${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
-            <img src={spotifylogo} alt="Spotify" className="search-icon" />
-          </a>
-          <a href={`https://www.google.com/search?q=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
-            <img src={googlelogo} alt="Google" className="search-icon" />
-          </a>
-        </div>
-        {logged_in && (
-          <div className="add-button-wrapper">
-            <button onClick={playlist_add}>Add to playlist</button>
+        {valid_reco && (
+          <div>
+            <div className="search-buttons">
+              <a href={`https://www.youtube.com/results?search_query=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
+              <img src={youtubelogo} alt="YouTube" className="search-icon" />
+              </a>
+              <a href={`https://open.spotify.com/search/${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
+              <img src={spotifylogo} alt="Spotify" className="search-icon" />
+              </a>
+              <a href={`https://www.google.com/search?q=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
+              <img src={googlelogo} alt="Google" className="search-icon" />
+              </a>
+            </div>
+            {logged_in && (
+              <div className="add-button-wrapper">
+                <button className='add-button' onClick={playlist_add}>Add to playlist</button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -154,7 +160,12 @@ function App() {
                 onKeyDown={e => { if (e.key === 'Enter') search_handle(); }}
               />
             </div>
-            <div className='button-wrapper'><MyButton /></div> {/* will leave this for later, suppose to lead to a complete random song */}
+            <div className='button-wrapper'>
+              <MyButton onClick={() => {
+                set_reco("This button is not implemented yet!😛");
+                set_reco_validity(false);
+                }} /> {/* will leave this for later, suppose to lead to a complete random song */}
+            </div> 
             {reco_stuffs}
           </div>
         } />

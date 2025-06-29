@@ -20,7 +20,7 @@ h2 {
 
 .my-button {
   padding: 0.6rem 1.2rem;
-  font-size: 1rem;
+  font-size: 16px;
   border-radius: 20px;
   background-color: #00d084;
   color: black;
@@ -123,5 +123,11 @@ h2 {
 .add-button-wrapper {
   margin-top: 1rem;
   margin-bottom: 1rem;
+}
+
+.add-button{
+  border-radius: 8px;
+  font-family: 'roboto';
+  font-size: 15px;
 }
 
