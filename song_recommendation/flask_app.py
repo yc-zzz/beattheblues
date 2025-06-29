@@ -22,10 +22,6 @@ CORS(app,
      methods=["GET", "POST", "OPTIONS"]
 )
 
-#Global calling of recommendation, to prevent unnecessary loading of models
-#Allows for querying multiple times while model is only trained once
-#recommendation = Recommendation()
-
 @app.route('/')
 def health():
     return 'Beat the Blues Flask API is live!'
@@ -50,15 +46,3 @@ def recommend():
     except Exception as e:
         print("Recommendation error:", e)
         return jsonify({'error': str(e)}), 500
-    
-'''
-def recommend(): 
-    data = request.get_json()
-    user_query = data.get('query')
-    if not user_query: 
-        return jsonify({"Error": "No query provided"}), 400
-    
-    recommender = get_recommender()
-    result = recommender.song_recommendation(user_query)
-    return jsonify({'recommendation': result})
-'''

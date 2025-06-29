@@ -61,7 +61,7 @@ df[['dance', 'acoustic', 'aggressive', 'electronic', 'happy', 'party', 'relaxed'
 df = df.set_index('id')
 df = df[~df.index.duplicated(keep='first')]
 
-#print(df.shape) #(86035, 17) -- out of an original 100,000 entries, this is still sufficient.
+#print(df.shape) # -- 86,035 / 100,000 (original) entries, this is still sufficient.
 #print(df.isna().sum()) #No missing values in DataFrame! 
 
 #df.to_csv("sample_data.csv", index=False) -- can be found in GitHub as a back-up, but this will be stored primarily in PostgreSQL

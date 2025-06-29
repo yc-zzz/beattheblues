@@ -1,9 +1,6 @@
 # Libraries
 from model_utils import import_credentials, cosine_similarity_loss
 import pandas as pd
-#from sentence_transformers import SentenceTransformer #install: pip install -U sentence-transformers
-#from tensorflow import keras
-#from keras.models import load_model
 import faiss
 import numpy as np
 
@@ -33,15 +30,7 @@ class Recommendation:
         self.current_query = None
         self.current_result = None
         self.loaded = False
-        '''
-        self.engine = import_credentials()
-        self.ml_model = load_model('ml_vector_reduction.keras', custom_objects = {"cosine_similarity_loss": cosine_similarity_loss})
-        self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col = 'id')
-        self.num_data = self.num_data_df.to_numpy().astype(float)
-        self.nlp_model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.current_query = None
-        self.current_result = None 
-        ''' 
+       
     def load(self):
         import os
         os.environ["HF_HOME"] = "/tmp" #Prevent memory spikes by disabling SentenceTransformer's cache
@@ -107,9 +96,3 @@ class Recommendation:
         else: 
             self.current_query = query
             return self.song_generation(query)
-            
-#glo
-#recommender = Recommendation()
-
-#query = input("Tell us what you like, and we'll give you something obscure.")
-#print(recommender.song_recommendation(query))

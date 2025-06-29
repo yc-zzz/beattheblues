@@ -45,7 +45,7 @@ numeric_cols = data_num.select_dtypes(include=[np.number, bool]).columns.to_list
 data_num = data_num[numeric_cols]
 
 # print(data_num.head())
-# print(data_num.shape) #(97086, 32)
+# print(data_num.shape) 
 
 data_num.to_sql("song_vector", engine, if_exists='replace', index=True, index_label = 'id')
 
