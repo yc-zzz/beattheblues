@@ -46,3 +46,5 @@ router.delete('/playlist/:id', async (req, res) => {
     res.status(500).json({message: 'Unable to delete song'});
   }
 });
+
+export default router;
