@@ -8,4 +8,4 @@ const db = new Pool({
   },
 });
 
-export default pool;
+export default db;
