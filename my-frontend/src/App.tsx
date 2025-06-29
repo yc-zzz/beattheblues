@@ -4,10 +4,12 @@ import defaultprofile from './pics/profile-icon-png-898.png';
 import youtubelogo from './pics/youtube_logo.png';
 import spotifylogo from './pics/spotify.png';
 import googlelogo from './pics/google.png';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import SigninForm from './components/signinform';
 import Profile from './pages/profile';
 import Playlist from './pages/playlist';
+//putting it here before I lose track
+//h1: homepage logo h2: words below the log h3: first line in playlist and profile h5: register/login in the popup 
 
 function MyButton({ onClick }:{onClick: () => void }) {
   return <button className='my-button' onClick={onClick}>I'm feeling adventurous!</button>;
@@ -39,8 +41,12 @@ function App() {
       const data = await response.json();
       set_reco(data.recommendation || 'No result, try another prompt?'); //sometimes first try lead to no result, will try to track down why
       set_reco_validity(!!data.recommendation); //TIL !! force it to become boolean, pretty cool
-    } catch (err) {
-      console.error('Error fetching recomendation:', err);
+      if (data.recommendation == "Please give us a new description!"){
+        set_reco_validity(false);
+      }
+    } 
+    catch (err) {
+      console.error(err);
       set_reco('Cannot fetch recommendation, try again later.');
     }
   };
@@ -67,7 +73,8 @@ function App() {
       });
       const data = await response.json();
       alert(data.message);
-    } catch (err){
+    } 
+    catch (err){
       alert('Failed to save song');
       console.error(err);
     }
@@ -126,7 +133,8 @@ function App() {
           if (!logged_in) {
             e.preventDefault();
             set_popup(true);
-          } else {
+          } 
+          else {
             window.location.href = '/playlist';
           }
         }}>Playlist</a>
@@ -135,7 +143,8 @@ function App() {
           if (!logged_in) {
             e.preventDefault();
             set_popup(true);
-          } else {
+          } 
+          else {
             window.location.href = '/profile';
           }
         }}>Profile</a>

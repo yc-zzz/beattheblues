@@ -7,29 +7,14 @@ body {
   font-family: sans-serif;
 }
 
-h2 {
-  margin: 0;
-  padding: 0;
-  color:white;
+.profile {
   text-align: center;
-  font-family: sans-serif;
+  line-height: 3rem;
 }
 
-.home-link {
+.construction {
   position: fixed;
   bottom: 1rem;
-  left: 2rem;
-  font-weight: bold;
-  font-size: 0.95rem;
-  color: #00d084;
-  text-decoration: none;
-  background: transparent;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: color 0.2s ease;
-}
-
-.home-link:hover {
-  color: #00b574;
-  text-decoration: underline;
+  right: 2rem;
+  font-size: 15px;
 }
