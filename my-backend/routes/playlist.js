@@ -1,5 +1,6 @@
-const router = express.Router();
+import express from 'express';
 import db from '../db.js';
+const router = express.Router();
 
 //for sending saved songs to db
 router.post('/playlist', async (req, res) => {
