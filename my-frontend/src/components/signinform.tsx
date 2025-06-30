@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import './signinform.css';
 
-export default function SigninForm({ when_closed, when_logged_in }: { when_closed: () => void; when_logged_in: (username: string) => void }) {
+export default function SigninForm({when_closed, when_logged_in}: {when_closed: () => void; when_logged_in: (username: string) => void}) {
   const [username, set_user] = useState('');
   const [password, set_pass] = useState('');
   const [message, set_signin_message] = useState('');

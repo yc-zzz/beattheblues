@@ -16,12 +16,12 @@ function MyButton({ onClick }:{onClick: () => void }) {
 }
 
 function App() {
-  const [popup, set_popup] = useState(false);
+  const [popup, set_popup] = useState(false); //basically login tab
   const [logged_in, set_logged_in] = useState(false);
   const [username, set_user] = useState('');
   const [query, set_query] = useState('');
   const [recommendation, set_reco] = useState('');
-  const [valid_reco, set_reco_validity] = useState(false)
+  const [valid_reco, set_reco_validity] = useState(false) //this is added later to control when the search icons show up
 
   useEffect( () => {
     const stored_user = localStorage.getItem('username');
@@ -102,7 +102,7 @@ function App() {
     reco_stuffs = (
       <div className="recommendation-result">
         <p>{recommendation}</p>
-        {valid_reco && (
+        {valid_reco && (//when recommendation is legit, icons popup
           <div>
             <div className="search-buttons">
               <a href={`https://www.youtube.com/results?search_query=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
@@ -131,7 +131,7 @@ function App() {
       <div className='top-bar'>
         <a href="#" className="top-link" onClick={(e) => {
           if (!logged_in) {
-            e.preventDefault();
+            e.preventDefault(); //good habit to prevent accidental refreshe
             set_popup(true);
           } 
           else {
@@ -145,7 +145,7 @@ function App() {
             set_popup(true);
           } 
           else {
-            window.location.href = '/profile';
+            window.location.href = '/profile'; //TODO: change to <link> later instead preventing page reloads
           }
         }}>Profile</a>
 
@@ -173,7 +173,7 @@ function App() {
               <MyButton onClick={() => {
                 set_reco("This button is not implemented yet!😛");
                 set_reco_validity(false);
-                }} /> {/* will leave this for later, suppose to lead to a complete random song */}
+                }} /> {/* will leave this for later, suppose to lead to a complete random song but can't redeploy backend now*/}
             </div> 
             {reco_stuffs}
           </div>
