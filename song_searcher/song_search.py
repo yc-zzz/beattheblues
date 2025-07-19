@@ -2,6 +2,16 @@
 from model_utils import import_credentials
 import pandas as pd
 
+searcher = None 
+
+def get_search(): 
+    print("get_search was called")
+    global searcher
+    if searcher is None: 
+        print("Instantiating Search...")
+        searcher = Search()
+    return searcher
+
 #song search object
 class Search: 
     def __init__(self): 
