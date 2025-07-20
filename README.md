@@ -4,8 +4,11 @@ Simply search a word or phrase, about anything. Be it your feelings, the weather
 
 ## Deployment
 Frontend: Vercel
+
 Backend: Render
+
 Database: Neon
-This is a full stack web app that is deployed, and thus can be accessed through the web link. No to run locally!
+
+This is a full stack web app that is deployed, and thus can be accessed through the web link. No need to run locally!
 As the web services are free tier, the deployed backend may take up to 50 seconds to spin up. Please be patient with our website!
 
