@@ -1,0 +1,1 @@
+web: gunicorn flask_app_search:app --bind=0.0.0.0:$PORT
