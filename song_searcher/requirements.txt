@@ -1,4 +1,5 @@
 python-dotenv==1.1.0
+pandas==2.3.0
 Flask
 flask-cors
 gunicorn
