@@ -170,10 +170,18 @@ function App() {
               />
             </div>
             <div className='button-wrapper'>
-              <MyButton onClick={() => {
-                set_reco("This button is not implemented yet!😛");
-                set_reco_validity(false);
-                }} /> {/* will leave this for later, suppose to lead to a complete random song but can't redeploy backend now*/}
+              <MyButton onClick={async() => {
+                try{
+                  const response = await fetch('https://beattheblues.onrender.com/random');
+                  const data = await response.json();
+                  set_reco(data.recommendation);
+                  set_reco_validity(true);
+                } catch(e){
+                  console.error(e);
+                  set_reco("Error fetching random song right now");
+                  set_reco_validity(false);
+                }
+                }} />
             </div> 
             {reco_stuffs}
           </div>
