@@ -2,6 +2,38 @@ from flask import Flask, request, jsonify
 import requests
 from flask_cors import CORS
 
+#import Personality
+try: 
+    from personality_api import get_personality
+    print("get_personality successfully imported.")
+except Exception as e: 
+    print("Failed to import get_personality ", e)
+    get_personality = None
+
+#functions for retrieval & recommendation
+#gets questions from API, displays them
+def display_question(): 
+    print("Retrieving questions...") #checks if function is called
+
+    try: 
+        questions = get_personality().get_questions()
+        return jsonify(questions)
+    except requests.exceptions.RequestException as e: 
+        print("Error: ", e)
+        return jsonify({'error': str(e)}), 400 
+    
+#returns personality description
+def personality_description(data): 
+    print("Getting personality description...") #checks if function is called 
+    
+    try:
+        response = data.get("answers", []) #returns list, empty list if failed. 
+        description = get_personality().get_user_description(response)
+        return jsonify({'description': description})
+    except Exception as e: 
+        print('Something went wrong: ', e)
+        return jsonify({'error': e})
+
 #Initialise Flask App 
 personality_app = Flask(__name__)
 CORS(personality_app, 
@@ -18,30 +50,19 @@ CORS(personality_app,
 @personality_app.route('/')
 def health(): 
     print("Beat the Blues Flask API (Personality) is live!")
+    return jsonify({"message": "Beat the Blues Flask API (Personality) is live!"}), 200
 
 #methods associated with personality test
 @personality_app.route('/personality', methods = ['GET', 'POST'])
-
-#gets questions from API, displays them
-def display_question(): 
-    print("Getting data from 16personalities-api...") #checks if function is called
-    get_url = "https://16personalities-api.com/api/personality/questions"
-    
-    try: 
-        get_response = requests.get(get_url)
-    except requests.exceptions.RequestException as e: 
-        print("Error: ", e)
-        return jsonify({'error': str(e)}), 400 
-    
-    response_json = get_response.json()
-    return response_json
-
-def personality_description(): 
-    print("Getting personality description...") #checks if function is called 
-    
+def action(): 
     data = request.get_json()
-    response = data.get("answers") 
-    """data should be a json array. {"answers": [{"id": "something", "value": "something else"}, {...} ...], "gender": "male/female" }"""
+    action = data.get("action") #frontend must send {"action": "..."}
+    if action == "display": 
+        return display_question()
+    elif action == "description": 
+        return personality_description(data)
+    else: 
+        return "Unknown action", 400
 
 
 

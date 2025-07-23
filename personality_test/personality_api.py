@@ -1,7 +1,6 @@
 from reset_time import PersonalityTable
 from datetime import date 
 from model_utils import import_credentials
-from sqlalchemy import text 
 
 questions = [
     {"id": 1, "question": "What is your MBTI?"}, 
@@ -12,6 +11,17 @@ questions = [
     {"id": 6, "question": "Describe your best friend."},
     {"id": 7, "question": "What emotion do you resonate with the most?"},
     ]
+
+personality = None 
+def get_personality(): 
+    print("get_personality was called.")
+    global personality
+    if personality == None: 
+        print("Initialising personality object...")
+        personality = Personality()
+    if personality.initialise == False: 
+        personality.load()
+    return personality
 
 class Personality: 
     def __init__(self): 

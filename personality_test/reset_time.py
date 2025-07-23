@@ -2,17 +2,6 @@ from model_utils import import_credentials
 from sqlalchemy import text 
 import psycopg2
 
-"""
-create a table in neon -- containing user_id, last_refresh_time, description
-at the start of the new day, automatically: 
-- deletes all entries
-for each query that comes in, checks if there exists a same-day query
-- updates table with entries if there isn't such a query
-- does not update table if there is, sends back same-day description. 
-no longer processes queries once table exceeds 199 entries. 
-
-"""
-
 class PersonalityTable: 
     def __init__(self): 
         self.engine = import_credentials()
