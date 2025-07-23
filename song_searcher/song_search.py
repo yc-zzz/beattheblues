@@ -40,7 +40,7 @@ class Search:
         self.data = pd.read_sql(self.sql_query, con=self.engine, params = self.parameters)
         if not self.data.empty: 
             for ind, row in self.data.iterrows(): 
-                yield f"{row['name']} by {row['artist']}."
+                yield f"{row['name']} by {row['artist']}"
         else: 
             self.current_result = None
             return self.current_result

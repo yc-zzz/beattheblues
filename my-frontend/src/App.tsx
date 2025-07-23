@@ -57,13 +57,13 @@ function App() {
       } else if (!search_mode && data["recommendation"]) {
         result = data["recommendation"];
       }
+      set_reco(result || 'No result, try another prompt?'); 
 
       if (result === "Please give us a new description!" || result === "Please try a different song."){
         set_reco_validity(false);
+      } else{
+          set_reco_validity(!!result);
       }
-
-      set_reco(result || 'No result, try another prompt?'); 
-      set_reco_validity(!!result);
     } catch (err) {
       console.error(err);
       set_reco('Cannot fetch recommendation, try again later.');
