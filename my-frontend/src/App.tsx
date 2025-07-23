@@ -21,7 +21,8 @@ function App() {
   const [username, set_user] = useState('');
   const [query, set_query] = useState('');
   const [recommendation, set_reco] = useState('');
-  const [valid_reco, set_reco_validity] = useState(false) //this is added later to control when the search icons show up
+  const [valid_reco, set_reco_validity] = useState(false); //this is added later to control when the search icons show up
+  const [search_mode, set_search_mode] = useState(false); //alternate search mode between recomm and search
 
   useEffect( () => {
     const stored_user = localStorage.getItem('username');
@@ -32,20 +33,38 @@ function App() {
   }, []);
 
   const search_handle = async() => {
+    let url = '';
+    let payload = {query}; 
+
+    if (search_mode){ //altermnate netween the two deployed web services
+      url = 'https://beattheblues-search.onrender.com/search';
+    } else {
+      url = 'https://beattheblues-reco.onrender.com/recommend';
+    }
+
     try {
-      const response = await fetch('https://beattheblues-reco.onrender.com/recommend', {
+      const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query})
       });
+
       const data = await response.json();
-      set_reco(data.recommendation || 'No result, try another prompt?'); //sometimes first try lead to no result, will try to track down why
-      set_reco_validity(!!data.recommendation); //TIL !! force it to become boolean, pretty cool
-      if (data.recommendation == "Please give us a new description!"){
+      let result = '';
+      
+      if (search_mode && data["search result"]) {
+        result = data["search result"];
+      } else if (!search_mode && data["recommendation"]) {
+        result = data["recommendation"];
+      }
+
+      if (result == "Please give us a new description!"){
         set_reco_validity(false);
       }
-    } 
-    catch (err) {
+
+      set_reco(result || 'No result, try another prompt?'); 
+      set_reco_validity(!!result);
+    } catch (err) {
       console.error(err);
       set_reco('Cannot fetch recommendation, try again later.');
     }
@@ -68,7 +87,7 @@ function App() {
     try {
       const response = await fetch('https://beattheblues.onrender.com/playlist', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({username, song: recommendation})
       });
       const data = await response.json();
@@ -183,6 +202,39 @@ function App() {
                 }
                 }} />
             </div> 
+            <div className='switch-mode'> 
+            {(() => {
+                if (search_mode){
+                  return(
+                  <p>
+                    Searching for exact songs. {''}
+                    <a href='#' onClick={(e) => {
+                      e.preventDefault();
+                      set_search_mode(false);
+                      set_reco('');
+                      set_reco_validity(false);
+                    }}>
+                      Switch to Recommendation Mode
+                    </a>
+                  </p>
+                  );
+                } else{
+                  return (
+                    <p>
+                      Recommending obscure songs. {''}
+                      <a href='#' onClick={(e) => {
+                        e.preventDefault();
+                        set_search_mode(true);
+                        set_reco('');
+                        set_reco_validity(false);
+                      }}>
+                        Switch to Search Mode
+                      </a>
+                    </p>
+                  );
+                }
+              })()}
+              </div>
             {reco_stuffs}
           </div>
         } />
@@ -192,5 +244,7 @@ function App() {
     </Router>
   );
 }
+
+
 
 export default App;
