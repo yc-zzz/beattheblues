@@ -32,34 +32,37 @@ class Personality:
         self.number_calls = 0  
         self.date = date.today()
         self.engine = None
-        self.data = None
         self.client_error = False
 
     def load(self): 
         self.initialise = True
         self.questions = questions
         self.engine = import_credentials
-        self.data = PersonalityTable()
-
+        
     def get_questions(self): 
         return self.questions 
     
     def refresh(self): 
         self.user_description = None
         self.number_calls = 0 
-        self.data.refresh() #deleting logs from previous days
         self.client_error = False
     
-    def no_more_requests(self): 
+    def no_more_requests(self): #if made >=3 requests a day / server down, no user_description.
         if self.date != date.today(): 
             self.refresh()
-        return self.number_calls > 2 or self.client_error == True #if made >3 requests a day / server down, no user_description.
+        if self.client_error == True: 
+            return "Client Error"
+        elif self.number_calls > 2: 
+            return "Too many tries"
+        else: 
+            return "Continue" 
     
     def get_user_description(self, answers): #assume answers is a list
-        if self.no_more_requests(): 
-            return "You've used up your quota for today! Please try again tomorrow."
+        if self.no_more_requests() == "Client Error": 
+            return f"API is down, try again tomorrow! Your current profile: {self.user_description}"
+        elif self.no_more_requests() == "Too many tries": 
+            return f"Too many tries, try again tomorrow! Your current profile: {self.user_description}"
         else: 
-            #self.data.create_table() #already done! 
             descriptors = ["My MBTI is: ", 
                            "4 adjectives that can be used to describe me are: ", 
                            "My ideal music experience is: ", 
@@ -100,5 +103,6 @@ class Personality:
 
         except Exception as e:
             print("Error: ", e) 
-                          
-        return response.output[0].content[0].text
+
+        self.user_description = response.output[0].content[0].text
+        return self.user_description
