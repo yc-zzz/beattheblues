@@ -40,14 +40,15 @@ class Search:
         self.data = pd.read_sql(self.sql_query, con=self.engine, params = self.parameters)
         if not self.data.empty: 
             for ind, row in self.data.iterrows(): 
-                self.current_result = f"Here's our closest song: {row['name']} by {row['artist']}. Click again if this isn't it!"
-                yield self.current_result
+                yield f"Here's our closest song: {row['name']} by {row['artist']}. Click again if this isn't it!"
         else: 
             self.current_result = None
             return self.current_result
     
     def return_song(self, query): 
-        if self.user_query == query: 
+        if query is None: 
+            return "Please enter a prompt!"
+        elif self.user_query == query and self.current_result is not None: 
             try: 
                 return next(self.current_result)
             except StopIteration: 
@@ -55,12 +56,7 @@ class Search:
         else:   
             self.user_query = query 
             self.current_result = self.load_data(query)
-            if self.current_result == None: 
+            if self.current_result is None: 
                 return "We might not have this song in our database! Please try a different song."
             else: 
                 return next(self.current_result)
-            
-#for testing purposes -- actual calls to the object will be implemented in the Flask script in Milestone 3. 
-#song_search = Search()
-#query = input("Search for a song: ")
-#print(song_search.return_song(query))
