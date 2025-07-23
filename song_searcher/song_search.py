@@ -40,7 +40,7 @@ class Search:
         self.data = pd.read_sql(self.sql_query, con=self.engine, params = self.parameters)
         if not self.data.empty: 
             for ind, row in self.data.iterrows(): 
-                yield f"Here's our closest song: {row['name']} by {row['artist']}. Click again if this isn't it!"
+                yield f"{row['name']} by {row['artist']}"
         else: 
             self.current_result = None
             return self.current_result
@@ -52,11 +52,11 @@ class Search:
             try: 
                 return next(self.current_result)
             except StopIteration: 
-                return "We might not have the song you're looking for. Try another song?"
+                return "Please try a different song."
         else:   
             self.user_query = query 
             self.current_result = self.load_data(query)
             if self.current_result is None: 
-                return "We might not have this song in our database! Please try a different song."
+                return "Please try a different song."
             else: 
                 return next(self.current_result)

@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import auth from './routes/auth.js';
 import playlist from './routes/playlist.js';
+import randomsong from './routes/random.js';
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,10 +32,12 @@ app.use(express.json());
 //login and registering are all here
 app.use(auth);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
 //for sending, fetching and deleting saved songs
 app.use(playlist);
 
+//fetch a random song for adventurous button
+app.use(randomsong);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});

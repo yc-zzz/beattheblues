@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import './signinform.css';
+import {GoogleLogin} from '@react-oauth/google';
 
 export default function SigninForm({when_closed, when_logged_in}: {when_closed: () => void; when_logged_in: (username: string) => void}) {
   const [username, set_user] = useState('');
@@ -56,9 +57,21 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
   if (register_toggle) { //simple switch mechanism for the form, clicking sign in sets it to false, vice versa for register
     popup_form = (
       <div>
-        <form onSubmit={reg_handle}>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const email_regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/; //did all this just to realise browser already default check for email format lol
+          if(!email_regex.test(email_reg)){
+            set_message_reg("Invalid email format");
+            return;
+          }
+          if(pass_reg.length <= 3){
+            set_message_reg("Password must be at least 4 characters");
+            return;
+          }
+          reg_handle(e);
+        }}
+        >
           <h5>Register</h5> 
-          {/*onChange will be used in the future for checking email validity or length of password, not used rn*/}
           <input type="text" placeholder="Username" value={username_reg} onChange={(e) => set_username_reg(e.target.value)} /> 
           <input type="email" placeholder="Email" value={email_reg} onChange={(e) => set_email_reg(e.target.value)} />
           <input type="password" placeholder="Password" value={pass_reg} onChange={(e) => set_pass_reg(e.target.value)} />
@@ -76,9 +89,27 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
           <h5>Sign In</h5>
           <input type="text" placeholder="Username" value={username} onChange={(e) => set_user(e.target.value)} />
           <input type="password" placeholder="Password" value={password} onChange={(e) => set_pass(e.target.value)} />
-          <button type="submit">Sign In</button>
+          <button style={{marginBottom: "0.5rem"}} type="submit">Sign In</button>
           {message && <p>{message}</p>}
         </form>
+        <GoogleLogin 
+        onSuccess={(response) => {
+          fetch('https://beattheblues.onrender.com/auth/google',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({token: response.credential}),
+          })
+          .then(response => response.json()) //parse the response jason
+          .then(data => { //the parsed data
+            if(data.success){
+              when_logged_in(data.username);
+            } else{
+              console.error(data.message)
+            }
+          })
+        }} 
+        onError={() => console.error('Login failed')}
+        />
         <p>Don't have an account? <button onClick={() => set_register_toggle(true)}>Register</button></p>
       </div>
     );
