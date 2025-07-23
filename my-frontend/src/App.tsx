@@ -58,7 +58,7 @@ function App() {
         result = data["recommendation"];
       }
 
-      if (result == "Please give us a new description!"){
+      if (result === "Please give us a new description!" || result === "Please try a different song."){
         set_reco_validity(false);
       }
 
@@ -181,7 +181,7 @@ function App() {
             <div className='search-wrapper'>
               <input
                 type="text"
-                placeholder="Type a keyword, like an artist, genre, mood..."
+                placeholder="Type a keyword, like a genre, weather or mood..."
                 className="search-input"
                 value={query}
                 onChange={e => set_query(e.target.value)}
