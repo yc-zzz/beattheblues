@@ -1,4 +1,3 @@
-from reset_time import PersonalityTable
 from datetime import date 
 from model_utils import import_credentials
 
@@ -81,8 +80,10 @@ class Personality:
         import os 
         import openai
         import time
+        from dotenv import load_dotenv
 
         try: 
+            load_dotenv()
             api_key = os.environ['API_KEY']
         except Exception as e: 
             raise RuntimeError("Missing environment variable: ", e)
@@ -106,3 +107,36 @@ class Personality:
 
         self.user_description = response.output[0].content[0].text
         return self.user_description
+    
+    def get_playlist(self): 
+        if self.user_description == None: 
+            return "No description found, unable to generate playlist!"
+        else: 
+            from ..song_recommendation.predict_ml import get_recommender
+            import numpy as np 
+            import pandas as pd 
+            import faiss
+
+            recommender = get_recommender() 
+            vector = recommender.generate_25d_vector(self.user_description) 
+
+            vector = vector / np.linalg.norm(vector, axis=1, keepdims=True)
+            normalised_data = get_recommender().num_data / np.linalg.norm(get_recommender().num_data, axis=1, keepdims=True)
+        
+            #indexing
+            index = faiss.IndexFlatIP(normalised_data.shape[1])
+            index.add(normalised_data)
+            D, I = index.search(vector, 6) #I is a numpy array, gets 6 songs
+            top_k = get_recommender().num_data_df.index[I[0]] #acceptable, because num_data and acousticbrainz data have the same index column (id).  
+            
+            #data retrieval
+            top_k_list = top_k.tolist()
+            placeholder = ','.join(['%s'] * len(top_k_list))
+            query = f"""SELECT id, name, artist
+                    FROM acousticbrainz_data
+                    WHERE id IN ({placeholder})
+            """
+            with self.engine.connect() as conn: 
+                recommendations = pd.read_sql(query, con=self.engine, params = tuple(top_k_list), index_col = 'id')
+                playlist = recommendations[['name', 'artist']].to_dict(orient = 'records')
+                return playlist

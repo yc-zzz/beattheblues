@@ -33,6 +33,16 @@ def personality_description(data):
     except Exception as e: 
         print('Something went wrong: ', e)
         return jsonify({'error': e})
+    
+def fetch_playlist(): 
+    print("Getting playlist...")
+
+    try: 
+        playlist = get_personality().get_playlist()
+        return jsonify({'playlist': playlist})
+    except Exception as e: 
+        print('No playlist fetched: ', e)
+        return jsonify({'error': e})
 
 #Initialise Flask App 
 personality_app = Flask(__name__)
@@ -61,6 +71,8 @@ def action():
         return display_question()
     elif action == "description": 
         return personality_description(data)
+    elif action == "playlist": 
+        return fetch_playlist()
     else: 
         return "Unknown action", 400
 

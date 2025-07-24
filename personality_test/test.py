@@ -1,16 +1,4 @@
-from reset_time import PersonalityTable
 from personality_api import Personality
-
-#PersonalityTable Object Tests
-example = PersonalityTable()
-
-def update_table_test():
-    import pandas as pd
-    from datetime import date
-    df = [{'id': 1, 'request_date': date(2025, 7, 21), 'description': 'yabadabadoo'}, 
-        {'id': 2, 'request_date': date(2025, 7, 21), 'description': 'yabadabadoo'}]
-    df = pd.DataFrame(df)
-    print(example.refresh())
 
 #Personality Object Tests
 test = Personality()
@@ -60,6 +48,11 @@ class FlaskTestCase(unittest.TestCase):
     def test_personality_description(self):
         response = self.app.post('/personality', json = {'action': 'description'})
         self.assertEqual(response.status_code, 200)
+
+    def test_fetch_playlist(self): 
+        response = self.app.post('/personality', json = {'action': 'playlist'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"playlist": 'No description found, unable to generate playlist!'})
 
 if __name__ == "__main__": 
     unittest.main()
