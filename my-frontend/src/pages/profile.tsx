@@ -9,7 +9,7 @@ export default function Personality() {
   const [submitted, set_submitted] = useState(false); //state tracker for submission
 
   useEffect(() => {
-    fetch('https://beattheblues-personality.onrender.com/personality',{
+    fetch('https://beattheblues-reco.onrender.com/personality',{
       method:'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action: 'display'})
@@ -28,7 +28,7 @@ export default function Personality() {
   };
 
   const handle_submit = async () => { //handles submission of personality answer to backend
-    const res = await fetch('https://beattheblues-personality.onrender.com/personality',{
+    const res = await fetch('https://beattheblues-reco.onrender.com/personality',{
       method:'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action: 'description', answers:answers})
@@ -39,7 +39,7 @@ export default function Personality() {
   };
 
   const handle_get_playlist = async () => {//gets playlist, surprise
-    const res = await fetch('https://beattheblues-personality.onrender.com/personality',{
+    const res = await fetch('https://beattheblues-reco.onrender.com/personality',{
       method:'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action: 'playlist'})

@@ -25,9 +25,13 @@ CORS(search_app,
 def health(): 
     return "Beat the Blues Flask API (Search) is Live!"
 
-@search_app.route('/search', methods=['POST'])
+@search_app.route('/search', methods=['POST', 'OPTIONS'])
 def normal_search(): 
     print("/search hit")
+
+    if request.method == 'OPTIONS':
+        return '', 200
+
     if get_search is None: 
         return jsonify({'error': 'Recommender not available'}), 500 
     

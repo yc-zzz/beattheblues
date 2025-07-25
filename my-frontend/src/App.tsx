@@ -37,7 +37,7 @@ function App() {
     let payload = {query}; 
 
     if (search_mode){ //altermnate netween the two deployed web services
-      url = 'https://beattheblues-search.onrender.com/search';
+      url = 'https://beattheblues-reco.onrender.com/search';
     } else {
       url = 'https://beattheblues-reco.onrender.com/recommend';
     }
