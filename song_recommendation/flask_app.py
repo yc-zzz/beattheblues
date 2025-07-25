@@ -25,7 +25,7 @@ CORS(reco_app,
 def health():
     return 'Beat the Blues Flask API is live!'
 
-@reco_app.route('/recommend', methods=['POST'])
+@reco_app.route('/recommend', methods=['POST'], provide_automatic_options=True)
 def recommend():
     print("/recommend hit")
     if get_recommender is None:

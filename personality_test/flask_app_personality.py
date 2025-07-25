@@ -63,7 +63,7 @@ def health():
     return jsonify({"message": "Beat the Blues Flask API (Personality) is live!"}), 200
 
 #methods associated with personality test
-@personality_app.route('/personality', methods = ['GET', 'POST'])
+@personality_app.route('/personality', methods = ['GET', 'POST'], provide_automatic_options=True)
 
 def action(): 
     data = request.get_json()

@@ -25,7 +25,7 @@ CORS(search_app,
 def health(): 
     return "Beat the Blues Flask API (Search) is Live!"
 
-@search_app.route('/search', methods=['POST'])
+@search_app.route('/search', methods=['POST'], provide_automatic_options=True)
 def normal_search(): 
     print("/search hit")
     if get_search is None: 
