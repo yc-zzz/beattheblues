@@ -42,9 +42,11 @@ class Recommendation:
         from tensorflow import keras
         from keras.models import load_model
         from sentence_transformers import SentenceTransformer
+        import os
         
+        model_path = os.path.join(os.path.dirname(__file__), 'ml_vector_reduction.keras')
         self.engine = import_credentials()
-        self.ml_model = load_model('ml_vector_reduction.keras', custom_objects = {"cosine_similarity_loss": cosine_similarity_loss})
+        self.ml_model = load_model(model_path, custom_objects={"cosine_similarity_loss": cosine_similarity_loss})
         self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col='id')
         self.num_data = self.num_data_df.to_numpy().astype(float)
         self.nlp_model = SentenceTransformer('paraphrase-MiniLM-L3-v2')
