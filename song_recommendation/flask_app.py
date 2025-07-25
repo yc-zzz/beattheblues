@@ -3,15 +3,15 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 try:
-    from predict_ml import get_recommender
+    from song_recommendation.predict_ml import get_recommender
     print("predict_ml imported successfully")
 except Exception as e:
     print("predict_ml import failed:", e)
     get_recommender = None
 
 #Initialise Flask App
-app = Flask(__name__)
-CORS(app,
+reco_app = Flask(__name__)
+CORS(reco_app,
      origins=[
          "http://localhost:3000",
          "https://beattheblues.vercel.app"
@@ -21,11 +21,11 @@ CORS(app,
      methods=["GET", "POST", "OPTIONS"]
 )
 
-@app.route('/')
+@reco_app.route('/')
 def health():
     return 'Beat the Blues Flask API is live!'
 
-@app.route('/recommend', methods=['POST'])
+@reco_app.route('/recommend', methods=['POST'])
 def recommend():
     print("/recommend hit")
     if get_recommender is None:

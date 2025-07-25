@@ -10,8 +10,8 @@ except Exception as e:
     get_search = None
 
 #initialise flask app
-app = Flask(__name__)
-CORS(app, 
+search_app = Flask(__name__)
+CORS(search_app, 
      origins=[
          "http://localhost:3000", 
          "https://beattheblues.vercel.app"
@@ -21,11 +21,11 @@ CORS(app,
      methods=["GET", "POST", "OPTIONS"]
 )
 
-@app.route('/')
+@search_app.route('/')
 def health(): 
     return "Beat the Blues Flask API (Search) is Live!"
 
-@app.route('/search', methods=['POST'])
+@search_app.route('/search', methods=['POST'])
 def normal_search(): 
     print("/search hit")
     if get_search is None: 

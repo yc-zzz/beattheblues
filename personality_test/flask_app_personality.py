@@ -4,7 +4,7 @@ from flask_cors import CORS
 
 #import Personality
 try: 
-    from personality_api import get_personality
+    from personality_test.personality_api import get_personality
     print("get_personality successfully imported.")
 except Exception as e: 
     print("Failed to import get_personality ", e)
