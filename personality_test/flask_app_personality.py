@@ -32,7 +32,7 @@ def personality_description(data):
         return jsonify({'description': description})
     except Exception as e: 
         print('Something went wrong: ', e)
-        return jsonify({'error': e})
+        return jsonify({'error': str(e)})
     
 def fetch_playlist(): 
     print("Getting playlist...")
@@ -42,7 +42,7 @@ def fetch_playlist():
         return jsonify({'playlist': playlist})
     except Exception as e: 
         print('No playlist fetched: ', e)
-        return jsonify({'error': e})
+        return jsonify({'error': str(e)})
 
 #Initialise Flask App 
 personality_app = Flask(__name__)

@@ -36,7 +36,7 @@ class Personality:
     def load(self): 
         self.initialise = True
         self.questions = questions
-        self.engine = import_credentials
+        self.engine = import_credentials()
         
     def get_questions(self): 
         return self.questions 
