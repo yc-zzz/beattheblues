@@ -25,14 +25,12 @@ CORS(reco_app,
 def health():
     return 'Beat the Blues Flask API is live!'
 
-@reco_app.route('/recommend', methods=['POST', 'OPTIONS'])
+@reco_app.route('/recommend', methods=['POST'])
 def recommend():
     print("/recommend hit")
     if get_recommender is None:
         return jsonify({'error': 'Recommender not available'}), 500
 
-    if request.method == 'OPTIONS':
-        return '', 200
     try:
         data = request.get_json()
         user_query = data.get('query')
