@@ -1,5 +1,5 @@
 # Libraries
-from model_utils import import_credentials, cosine_similarity_loss
+from song_recommendation.model_utils import import_credentials, cosine_similarity_loss
 import pandas as pd
 import faiss
 import numpy as np

@@ -1,5 +1,5 @@
 from datetime import date 
-from model_utils import import_credentials
+from personality_test.model_utils import import_credentials
 
 questions = [
     {"id": 1, "question": "What is your MBTI?"}, 
@@ -112,7 +112,7 @@ class Personality:
         if self.user_description == None: 
             return "No description found, unable to generate playlist!"
         else: 
-            from ..song_recommendation.predict_ml import get_recommender
+            from song_recommendation.predict_ml import get_recommender
             import numpy as np 
             import pandas as pd 
             import faiss

@@ -3,7 +3,7 @@ from flask_cors import CORS
 
 #import search object
 try: 
-    from song_search import get_search
+    from song_searcher.song_search import get_search
     print("Successfully imported get_search")
 except Exception as e: 
     print("Failed to import get_search, ", e) 
@@ -21,7 +21,7 @@ CORS(search_app,
      methods=["GET", "POST", "OPTIONS"]
 )
 
-@search_app.route('/')
+@search_app.route('/', endpoint='search_health')
 def health(): 
     return "Beat the Blues Flask API (Search) is Live!"
 

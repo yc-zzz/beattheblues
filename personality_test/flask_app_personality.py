@@ -57,7 +57,7 @@ CORS(personality_app,
 )
 
 #health check
-@personality_app.route('/')
+@personality_app.route('/', endpoint='personality_health')
 def health(): 
     print("Beat the Blues Flask API (Personality) is live!")
     return jsonify({"message": "Beat the Blues Flask API (Personality) is live!"}), 200

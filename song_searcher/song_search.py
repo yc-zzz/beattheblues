@@ -1,5 +1,5 @@
 #libraries
-from model_utils import import_credentials
+from song_searcher.model_utils import import_credentials
 import pandas as pd
 
 searcher = None 

@@ -21,7 +21,7 @@ CORS(reco_app,
      methods=["GET", "POST", "OPTIONS"]
 )
 
-@reco_app.route('/')
+@reco_app.route('/', endpoint='reco_health')
 def health():
     return 'Beat the Blues Flask API is live!'
 
