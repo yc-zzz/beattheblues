@@ -145,6 +145,13 @@ function App() {
     );
   }
 
+  let placeholder = "";
+  if (search_mode){
+    placeholder = "Search for a song or artist...";
+  } else {
+    placeholder = "Type a keyword, like a genre, weather or mood..."
+  }
+
   return (
     <Router>
       <div className='top-bar'>
@@ -181,7 +188,7 @@ function App() {
             <div className='search-wrapper'>
               <input
                 type="text"
-                placeholder="Type a keyword, like a genre, weather or mood..."
+                placeholder={placeholder}
                 className="search-input"
                 value={query}
                 onChange={e => set_query(e.target.value)}
