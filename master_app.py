@@ -28,6 +28,17 @@ for rule in search_app.url_map.iter_rules():
         view_func = search_app.view_functions[rule.endpoint]
         master_app.add_url_rule(rule.rule, endpoint=rule.endpoint, view_func=view_func, methods=rule.methods)
 
+from flask_cors import CORS
+CORS(master_app,
+     origins=[
+         "http://localhost:3000",
+         "https://beattheblues.vercel.app"
+     ],
+     supports_credentials=True,
+     allow_headers=["Content-Type"],
+     methods=["GET", "POST", "OPTIONS"]
+)
+
 # Health Check
 @master_app.route('/')
 def health():
