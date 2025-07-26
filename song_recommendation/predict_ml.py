@@ -77,7 +77,7 @@ class Recommendation:
                 WHERE id IN ({placeholder})
         """
         with self.engine.connect() as conn: 
-            recommendations = pd.read_sql(query, con=self.engine, params = tuple(top_k_list), index_col = 'id')
+            recommendations = pd.read_sql(query, con=conn, params = tuple(top_k_list), index_col = 'id')
         for ind, row in recommendations.iterrows(): 
             yield f"- {row['name']} by {row['artist']}"
         
