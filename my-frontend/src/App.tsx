@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import './App.css';
 import defaultprofile from './pics/profile-icon-png-898.png';
 import youtubelogo from './pics/youtube_logo.png';
 import spotifylogo from './pics/spotify.png';
 import googlelogo from './pics/google.png';
+import searchicon from './pics/search.png';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import SigninForm from './components/signinform';
 import Profile from './pages/profile';
@@ -11,7 +12,7 @@ import Playlist from './pages/playlist';
 //putting it here before I lose track
 //h1: homepage logo h2: words below the log h3: first line in playlist and profile h5: register/login in the popup 
 
-function MyButton({ onClick }:{onClick: () => void }) {
+function MyButton({onClick}:{onClick: () => void }) {
   return <button className='my-button' onClick={onClick}>I'm feeling adventurous!</button>;
 }
 
@@ -193,6 +194,12 @@ function App() {
                 value={query}
                 onChange={e => set_query(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') search_handle(); }}
+              /> 
+              <img
+              src={searchicon}
+              alt="Search"
+              className="search-enter"
+              onClick={search_handle}
               />
             </div>
             <div className='button-wrapper'>

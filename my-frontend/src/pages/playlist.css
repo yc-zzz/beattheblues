@@ -9,7 +9,7 @@ body {
 
 h3 {  
   font-size: 25px;
-  margin-top: 4rem;
+  margin-top: 1rem;
   margin-bottom: 3rem;
   padding: 0;
   color:white;
@@ -23,7 +23,7 @@ h3 {
 
 .home-link {
   position: fixed;
-  bottom: 1rem;
+  top: 2rem;
   left: 2rem;
   font-weight: bold;
   font-size: 15px;

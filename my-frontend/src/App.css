@@ -39,6 +39,7 @@ h2 {
 }
 
 .search-wrapper {
+  position: relative;
   text-align: center;
   margin: 1rem;
 }
@@ -110,13 +111,15 @@ h2 {
   justify-content: center;
   align-items: center;
   gap: 1rem;
+  margin-left: 1rem;
 }
 
 .search-icon {
-  width: 50px;
+  width: 40px;
   height: auto;
   transition: transform 0.2s ease;
   cursor: pointer;
+  vertical-align: middle
 }
 
 .search-icon:hover {
@@ -140,4 +143,14 @@ h2 {
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
+}
+
+.search-enter {
+  position:absolute;
+  cursor: pointer;
+  top: 25%;
+  width: 20px;
+  height: auto;
+  vertical-align: middle;
+  margin-left: -2rem;
 }

@@ -1,5 +1,8 @@
 import {useEffect, useState} from 'react';
 import './playlist.css';
+import youtubelogo from '../pics/youtube_logo.png';
+import spotifylogo from '../pics/spotify.png';
+import googlelogo from '../pics/google.png';
 
 const Playlist = () => { 
   const username = localStorage.getItem('username'); 
@@ -66,6 +69,17 @@ const Playlist = () => {
               <button className='delete-button' onClick={() => delete_song(song.id)}>
                 🗑 Delete
               </button>
+              <div className="search-buttons">
+              <a href={`https://www.youtube.com/results?search_query=${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
+              <img src={youtubelogo} alt="YouTube" className="search-icon" />
+              </a>
+              <a href={`https://open.spotify.com/search/${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
+              <img src={spotifylogo} alt="Spotify" className="search-icon" />
+              </a>
+              <a href={`https://www.google.com/search?q=${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
+              <img src={googlelogo} alt="Google" className="search-icon" />
+              </a>
+            </div>
             </li>
           ))}
         </ul>

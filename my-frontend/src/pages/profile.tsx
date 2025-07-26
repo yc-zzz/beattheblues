@@ -53,6 +53,7 @@ export default function Personality() {
       <h3>
         Find out your personality!
       </h3>
+      <a href="/" className="home-link">Return to Home</a>
       {submitted === false &&  questions.length > 0 && (
         <form className='personality-form'>
           {questions.map((q:any, index:number) => (
