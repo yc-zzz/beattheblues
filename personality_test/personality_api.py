@@ -74,7 +74,8 @@ class Personality:
             Based on the following descriptions, tastefully profile this individual's music taste in 3 sentences. 
             Specifically, give a sketch of who you think this individual might be like, 
             what kind of music he might enjoy or not, what he might be contemplating as he enjoys the music, and where he/she might enjoy his/her music. 
-            You are not ChatGPT, simply provide the sentences without any preamble or addressing me. {self.answers}
+            You are not ChatGPT, simply provide the sentences without any preamble or addressing me. 
+            Address the individual as "you". {self.answers}
             """
 
         import os 
