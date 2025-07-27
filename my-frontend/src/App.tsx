@@ -9,11 +9,20 @@ import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import SigninForm from './components/signinform';
 import Profile from './pages/profile';
 import Playlist from './pages/playlist';
+import '../node_modules/react-tooltip/dist/react-tooltip.css'
+import {Tooltip} from 'react-tooltip'
 //putting it here before I lose track
 //h1: homepage logo h2: words below the log h3: first line in playlist and profile h5: register/login in the popup 
 
 function MyButton({onClick}:{onClick: () => void }) {
-  return <button className='my-button' onClick={onClick}>I'm feeling adventurous!</button>;
+  return <button 
+  className='my-button' 
+  onClick={onClick}
+  data-tooltip-id="my-tooltip"
+  data-tooltip-content="Get a completely random song!"
+  data-tooltip-place="right">
+    I'm feeling adventurous!
+    </button>;    
 }
 
 function App() {
@@ -128,7 +137,13 @@ function App() {
               <a href={`https://www.youtube.com/results?search_query=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
               <img src={youtubelogo} alt="YouTube" className="search-icon" />
               </a>
-              <a href={`https://open.spotify.com/search/${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
+              <a 
+              href={`https://open.spotify.com/search/${encodeURI(recommendation)}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Song may not be available on Spotify!"
+              data-tooltip-place="bottom">
               <img src={spotifylogo} alt="Spotify" className="search-icon" />
               </a>
               <a href={`https://www.google.com/search?q=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
@@ -148,7 +163,7 @@ function App() {
 
   let placeholder = "";
   if (search_mode){
-    placeholder = "Search for a song or artist...";
+    placeholder = "Search for a song or an artist...";
   } else {
     placeholder = "Type a keyword, like a genre, weather or mood..."
   }
@@ -193,7 +208,7 @@ function App() {
                 className="search-input"
                 value={query}
                 onChange={e => set_query(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') search_handle(); }}
+                onKeyDown={e => {if (e.key === 'Enter') search_handle();}}
               /> 
               <img
               src={searchicon}
@@ -255,6 +270,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/playlist" element={<Playlist />} />
       </Routes>
+      <Tooltip id="my-tooltip" />
     </Router>
   );
 }

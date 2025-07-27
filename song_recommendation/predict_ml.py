@@ -47,7 +47,8 @@ class Recommendation:
         model_path = os.path.join(os.path.dirname(__file__), 'ml_vector_reduction.keras')
         self.engine = import_credentials()
         self.ml_model = load_model(model_path, custom_objects={"cosine_similarity_loss": cosine_similarity_loss})
-        self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=self.engine, index_col='id')
+        with self.engine.connect() as conn:
+            self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=conn, index_col='id')
         self.num_data = self.num_data_df.to_numpy().astype(float)
         self.nlp_model = SentenceTransformer('paraphrase-MiniLM-L3-v2')
         self.loaded = True
