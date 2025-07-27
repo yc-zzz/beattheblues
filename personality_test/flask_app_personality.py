@@ -27,8 +27,9 @@ def personality_description(data):
     print("Getting personality description...") #checks if function is called 
     
     try:
-        response = data.get("answers", []) #returns list, empty list if failed. 
-        description = get_personality().get_user_description(response)
+        response = data.get("answers", []) #returns list, empty list if failed.
+        user_id = data.get("username", "default") #pass in username from frontend, resorts to default if problem
+        description = get_personality().get_user_description(response, user_id=user_id)
         return jsonify({'description': description})
     except Exception as e: 
         print('Something went wrong: ', e)
@@ -38,7 +39,9 @@ def fetch_playlist():
     print("Getting playlist...")
 
     try: 
-        playlist = get_personality().get_playlist()
+        data = request.get_json()
+        user_id = data.get("username", "default")
+        playlist = get_personality().get_playlist(user_id=user_id)
         return jsonify({'playlist': playlist})
     except Exception as e: 
         print('No playlist fetched: ', e)

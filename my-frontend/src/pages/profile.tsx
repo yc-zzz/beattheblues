@@ -47,7 +47,7 @@ export default function Personality() {
     const res = await fetch('https://beattheblues-reco.onrender.com/personality',{
       method:'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({action: 'description', answers:answers})
+      body: JSON.stringify({action: 'description', answers:answers, username: username})
     });
     const data = await res.json();
     set_description(data.description);

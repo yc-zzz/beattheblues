@@ -27,8 +27,7 @@ class Personality:
         self.initialise = False
         self.questions = None
         self.answers = None
-        self.user_description = None
-        self.number_calls = 0  
+        self.user_descriptions = {}
         self.date = date.today()
         self.engine = None
         self.client_error = False
@@ -42,25 +41,18 @@ class Personality:
         return self.questions 
     
     def refresh(self): 
-        self.user_description = None
-        self.number_calls = 0 
         self.client_error = False
     
-    def no_more_requests(self): #if made >=3 requests a day / server down, no user_description.
+    def get_user_description(self, answers, user_id='default'): #assume answers is a list
         if self.date != date.today(): 
             self.refresh()
-        if self.client_error == True: 
-            return "Client Error"
-        elif self.number_calls > 2: 
-            return "Too many tries"
-        else: 
-            return "Continue" 
-    
-    def get_user_description(self, answers): #assume answers is a list
-        if self.no_more_requests() == "Client Error": 
-            return f"API is down, try again tomorrow! Your current profile: {self.user_description}"
-        elif self.no_more_requests() == "Too many tries": 
-            return f"Too many tries, try again tomorrow! Your current profile: {self.user_description}"
+        if not hasattr(self,'user_call_counts'): #checks if user exists already
+            self.user_call_counts = {}
+        if user_id not in self.user_call_counts:
+            self.user_call_counts[user_id] = 0
+        if self.user_call_counts[user_id] > 2:
+            cached_personality = self.user_descriptions.get(user_id, "(no profile available)")
+            return f"Too many tries, try again tomorrow! Your current profile: {cached_personality}"
         else: 
             descriptors = ["My MBTI is: ", 
                            "4 adjectives that can be used to describe me are: ", 
@@ -106,11 +98,14 @@ class Personality:
         except Exception as e:
             print("Error: ", e) 
 
-        self.user_description = response.output[0].content[0].text
-        return self.user_description
+        user_desc = response.output[0].content[0].text
+        self.user_descriptions[user_id] = user_desc
+        return user_desc
+
     
-    def get_playlist(self): 
-        if self.user_description == None: 
+    def get_playlist(self, user_id='default'):
+        description = self.user_descriptions.get(user_id)
+        if description == None:
             return "No description found, unable to generate playlist!"
         else: 
             from song_recommendation.predict_ml import get_recommender
@@ -119,7 +114,7 @@ class Personality:
             import faiss
 
             recommender = get_recommender() 
-            vector = recommender.generate_25d_vector(self.user_description) 
+            vector = recommender.generate_25d_vector(description) 
 
             vector = vector / np.linalg.norm(vector, axis=1, keepdims=True)
             normalised_data = get_recommender().num_data / np.linalg.norm(get_recommender().num_data, axis=1, keepdims=True)
