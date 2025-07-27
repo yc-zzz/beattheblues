@@ -237,7 +237,7 @@ function App() {
                   return(
                   <p>
                     Searching for exact songs. {''}
-                    <a href='#' onClick={(e) => {
+                    <a href='#' style={{color: '#CBC3E3'}} onClick={(e) => {
                       e.preventDefault();
                       set_search_mode(false);
                       set_reco('');
@@ -251,7 +251,7 @@ function App() {
                   return (
                     <p>
                       Recommending obscure songs. {''}
-                      <a href='#' onClick={(e) => {
+                      <a href='#' style={{color: '#CBC3E3'}} onClick={(e) => {
                         e.preventDefault();
                         set_search_mode(true);
                         set_reco('');

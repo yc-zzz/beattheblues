@@ -34,6 +34,7 @@ class Recommendation:
     def load(self):
         import os
         os.environ["HF_HOME"] = "/tmp" #Prevent memory spikes by disabling SentenceTransformer's cache
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #disable GPU since Render doesn't use GPU
 
         if self.loaded:
             return
@@ -47,10 +48,16 @@ class Recommendation:
         model_path = os.path.join(os.path.dirname(__file__), 'ml_vector_reduction.keras')
         self.engine = import_credentials()
         self.ml_model = load_model(model_path, custom_objects={"cosine_similarity_loss": cosine_similarity_loss})
-        with self.engine.connect() as conn:
-            self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=conn, index_col='id')
-        self.num_data = self.num_data_df.to_numpy().astype(float)
         self.nlp_model = SentenceTransformer('paraphrase-MiniLM-L3-v2')
+
+        try:
+            with self.engine.connect() as conn:
+                self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=conn, index_col='id')
+        except Exception as e:
+            print(e)
+            raise
+
+        self.num_data = self.num_data_df.to_numpy().astype(float)
         self.loaded = True
 
     def generate_25d_vector(self, query):
@@ -80,7 +87,7 @@ class Recommendation:
         with self.engine.connect() as conn: 
             recommendations = pd.read_sql(query, con=conn, params = tuple(top_k_list), index_col = 'id')
         for ind, row in recommendations.iterrows(): 
-            yield f"- {row['name']} by {row['artist']}"
+            yield f"{row['name']} by {row['artist']}"
         
     def song_generation(self, query):  
         vector = self.generate_25d_vector(query)
