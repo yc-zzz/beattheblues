@@ -43,6 +43,7 @@ class Personality:
     def refresh(self): 
         self.client_error = False
         self.user_call_counts = {}
+        self.date = date.today()
     
     def get_user_description(self, answers, user_id='default'): #assume answers is a list
         if self.date != date.today(): 
