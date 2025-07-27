@@ -42,6 +42,7 @@ class Personality:
     
     def refresh(self): 
         self.client_error = False
+        self.user_call_counts = {}
     
     def get_user_description(self, answers, user_id='default'): #assume answers is a list
         if self.date != date.today(): 
@@ -57,10 +58,11 @@ class Personality:
             descriptors = ["My MBTI is: ", 
                            "4 adjectives that can be used to describe me are: ", 
                            "My ideal music experience is: ", 
+                           "My top 3 artists are: ", 
                            "My favourite food is: ", 
                            "Here's how I'd describe my best friend: ", 
-                           "I resonate with this emotion the most: ", 
-                           "My top 3 artists are: "]
+                           "I resonate with this emotion the most: "
+                           ]
             self.answers = dict(zip(descriptors, answers))
             prompt = f"""You are a veteran in the music industry and a psychologist. 
             Based on the following descriptions, tastefully profile this individual's music taste in 3 sentences. 
@@ -87,11 +89,9 @@ class Personality:
             response = client.responses.create(model="gpt-4o-mini", 
                                                input= [{"role": "user", 
                                                     "content": prompt}])
-            self.number_calls += 1
             time.sleep(1)
         except openai.InternalServerError as e: 
             print("API rejected request: ", e)
-            self.number_calls += 1
             self.client_error = True
             time.sleep(1)
 
