@@ -126,7 +126,7 @@ function App() {
     );
   }
 
-  const [song_name] = recommendation.split(' by '); // this is just for spotify, cuz spotify prefer song name only
+  const spotify_name = recommendation.replace(' by ', ' '); // this is just for spotify, cuz spotify prefer song name only
 
   let reco_stuffs;
   if (recommendation) {
@@ -140,7 +140,7 @@ function App() {
               <img src={youtubelogo} alt="YouTube" className="search-icon" />
               </a>
               <a 
-              href={`https://open.spotify.com/search/${encodeURI(song_name)}`} 
+              href={`https://open.spotify.com/search/${encodeURI(spotify_name)}`} 
               target="_blank" 
               rel="noopener noreferrer"
               data-tooltip-id="my-tooltip"

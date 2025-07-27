@@ -124,7 +124,7 @@ export default function Personality() {
                   <a href={`https://www.youtube.com/results?search_query=${full_name}`} target="_blank" rel="noopener noreferrer">
                   <img src={youtubelogo} alt="YouTube" className="search-icon" />
                   </a>
-                  <a href={`https://open.spotify.com/search/${name}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://open.spotify.com/search/${encodeURI(`${name} ${artist}`)}`} target="_blank" rel="noopener noreferrer">
                   <img src={spotifylogo} alt="Spotify" className="search-icon" />
                   </a>
                   <a href={`https://www.google.com/search?q=${full_name}`} target="_blank" rel="noopener noreferrer">
