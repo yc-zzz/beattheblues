@@ -70,15 +70,15 @@ const Playlist = () => {
                 🗑 Delete
               </button>
               <div className="search-buttons">
-              <a href={`https://www.youtube.com/results?search_query=${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
-              <img src={youtubelogo} alt="YouTube" className="search-icon" />
-              </a>
-              <a href={`https://open.spotify.com/search/${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
-              <img src={spotifylogo} alt="Spotify" className="search-icon" />
-              </a>
-              <a href={`https://www.google.com/search?q=${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
-              <img src={googlelogo} alt="Google" className="search-icon" />
-              </a>
+                <a href={`https://www.youtube.com/results?search_query=${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
+                <img src={youtubelogo} alt="YouTube" className="search-icon" />
+                </a>
+                <a href={`https://open.spotify.com/search/${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
+                <img src={spotifylogo} alt="Spotify" className="search-icon" />
+                </a>
+                <a href={`https://www.google.com/search?q=${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
+                <img src={googlelogo} alt="Google" className="search-icon" />
+                </a>
             </div>
             </li>
           ))}

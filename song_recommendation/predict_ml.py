@@ -46,12 +46,12 @@ class Recommendation:
         import os
         
         model_path = os.path.join(os.path.dirname(__file__), 'ml_vector_reduction.keras')
-        self.engine = import_credentials()
+        engine = import_credentials() #engine instead of self.engine to force fresh engines
         self.ml_model = load_model(model_path, custom_objects={"cosine_similarity_loss": cosine_similarity_loss})
         self.nlp_model = SentenceTransformer('paraphrase-MiniLM-L3-v2')
 
         try:
-            with self.engine.connect() as conn:
+            with engine.connect() as conn:
                 self.num_data_df = pd.read_sql("SELECT * FROM song_vector", con=conn, index_col='id')
         except Exception as e:
             print(e)
@@ -84,8 +84,9 @@ class Recommendation:
                 FROM acousticbrainz_data
                 WHERE id IN ({placeholder})
         """
-        with self.engine.connect() as conn: 
-            recommendations = pd.read_sql(query, con=conn, params = tuple(top_k_list), index_col = 'id')
+        engine = import_credentials()
+        with engine.connect() as conn: 
+            recommendations = pd.read_sql(query, con=conn, params=tuple(top_k_list), index_col='id')
         for ind, row in recommendations.iterrows(): 
             yield f"{row['name']} by {row['artist']}"
         

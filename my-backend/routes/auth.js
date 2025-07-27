@@ -83,7 +83,7 @@ router.post('/auth/google', async(req, res) => {
       [email]
     );
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 0) {//if user does not exist, insert into table
       await db.query(
         'INSERT INTO users (username, email, password) VALUES ($1, $2, $3)',
         [username,email,null]

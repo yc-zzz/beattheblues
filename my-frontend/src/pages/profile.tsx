@@ -1,5 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import './profile.css'
+import youtubelogo from '../pics/youtube_logo.png';
+import spotifylogo from '../pics/spotify.png';
+import googlelogo from '../pics/google.png';
 
 export default function Personality() {
   const [questions, set_questions] = useState([]); //questions obtained from backend
@@ -48,6 +51,7 @@ export default function Personality() {
     set_playlist(data.playlist);
   };
 
+
   return (
     <div className='profile-page'>
       <h3>
@@ -80,11 +84,29 @@ export default function Personality() {
       {playlist.length >0 && (
       <div className='playlist-block'>
         <h2>recommended songs</h2>
-        <ul>
-          {playlist.map((song,idx) => (
-            <li key = {idx}>{song.name} by {song.artist}</li>
-          ))}
-        </ul>
+          <ul className='song-list'>
+            {playlist.map((song, idx) => {
+              const name = song?.name || ''; // Asign to empty string first if song is not ready to prevent crashing
+              const artist = song?.artist || '';
+              const query = encodeURI(`${name} by ${artist}`);
+              return (
+              <li key={idx} className="song-row">
+                <span>{song.name} by {song.artist}</span>
+                <div className="search-buttons">
+                  <a href={`https://www.youtube.com/results?search_query=${query}`} target="_blank" rel="noopener noreferrer">
+                  <img src={youtubelogo} alt="YouTube" className="search-icon" />
+                  </a>
+                  <a href={`https://open.spotify.com/search/${query}`} target="_blank" rel="noopener noreferrer">
+                  <img src={spotifylogo} alt="Spotify" className="search-icon" />
+                  </a>
+                  <a href={`https://www.google.com/search?q=${query}`} target="_blank" rel="noopener noreferrer">
+                  <img src={googlelogo} alt="Google" className="search-icon" />
+                  </a>
+                </div>
+              </li>
+              );
+            })}
+          </ul>
       </div>
       )}
     </div>
