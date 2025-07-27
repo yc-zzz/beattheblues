@@ -58,7 +58,7 @@ export default function Personality() {
     const res = await fetch('https://beattheblues-reco.onrender.com/personality',{
       method:'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({action: 'playlist'})
+      body: JSON.stringify({action: 'playlist', username: username})
     });
     const data = await res.json();
     set_playlist(data.playlist);
