@@ -46,7 +46,7 @@ function App() {
     let url = '';
     let payload = {query}; 
 
-    if (search_mode){ //altermnate netween the two deployed web services
+    if (search_mode){ //altermnate netween the two search mode
       url = 'https://beattheblues-reco.onrender.com/search';
     } else {
       url = 'https://beattheblues-reco.onrender.com/recommend';
@@ -126,6 +126,8 @@ function App() {
     );
   }
 
+  const [song_name] = recommendation.split(' by '); // this is just for spotify, cuz spotify prefer song name only
+
   let reco_stuffs;
   if (recommendation) {
     reco_stuffs = (
@@ -138,11 +140,11 @@ function App() {
               <img src={youtubelogo} alt="YouTube" className="search-icon" />
               </a>
               <a 
-              href={`https://open.spotify.com/search/${encodeURI(recommendation)}`} 
+              href={`https://open.spotify.com/search/${encodeURI(song_name)}`} 
               target="_blank" 
               rel="noopener noreferrer"
               data-tooltip-id="my-tooltip"
-              data-tooltip-content="Song may not be available on Spotify!"
+              data-tooltip-content="Spotify availability is subject to artist!"
               data-tooltip-place="bottom">
               <img src={spotifylogo} alt="Spotify" className="search-icon" />
               </a>

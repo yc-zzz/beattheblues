@@ -10,6 +10,12 @@ export default function Personality() {
   const [description, set_description] = useState(''); //personality description
   const [playlist, set_playlist] = useState<{name: string,artist: string}[]>([]);
   const [submitted, set_submitted] = useState(false); //state tracker for submission
+  const [username, set_username] = useState('');
+  
+  useEffect(() => {
+    const stored_user = localStorage.getItem('username');
+    if (stored_user) set_username(stored_user);
+  }, []);
 
   useEffect(() => {
     fetch('https://beattheblues-reco.onrender.com/personality',{
@@ -20,7 +26,13 @@ export default function Personality() {
     .then(res => res.json())
     .then(data => {
       set_questions(data);//stored questions
-      set_answers(Array(data.length).fill(''));//blank answers stored
+      const saved_answer = localStorage.getItem('personality_answers');
+      if(saved_answer){
+        const parsed_answers = JSON.parse(saved_answer);
+        set_answers(parsed_answers);
+      }else{
+        set_answers(Array(data.length).fill(''));//blank answers stored
+      }
     });
   },[]);
 
@@ -28,6 +40,7 @@ export default function Personality() {
     const updated_answers = [...answers];
     updated_answers[index] = value;
     set_answers(updated_answers);
+    localStorage.setItem('personality_answers', JSON.stringify(updated_answers)); //cache the answers locally to save them
   };
 
   const handle_submit = async () => { //handles submission of personality answer to backend
@@ -51,6 +64,21 @@ export default function Personality() {
     set_playlist(data.playlist);
   };
 
+  const playlist_add = async (song: {name: string; artist: string}) => {
+    try {
+      const response = await fetch('https://beattheblues.onrender.com/playlist', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, song: `${song.name} by ${song.artist}`})
+      });
+      const data = await response.json();
+      alert(data.message);
+    } 
+    catch (err){
+      alert('Failed to save song');
+      console.error(err);
+    }
+  };
 
   return (
     <div className='profile-page'>
@@ -88,20 +116,23 @@ export default function Personality() {
             {playlist.map((song, idx) => {
               const name = song?.name || ''; // Asign to empty string first if song is not ready to prevent crashing
               const artist = song?.artist || '';
-              const query = encodeURI(`${name} by ${artist}`);
+              const full_name = encodeURI(`${name} by ${artist}`);
               return (
               <li key={idx} className="song-row">
                 <span>{song.name} by {song.artist}</span>
                 <div className="search-buttons">
-                  <a href={`https://www.youtube.com/results?search_query=${query}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://www.youtube.com/results?search_query=${full_name}`} target="_blank" rel="noopener noreferrer">
                   <img src={youtubelogo} alt="YouTube" className="search-icon" />
                   </a>
-                  <a href={`https://open.spotify.com/search/${query}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://open.spotify.com/search/${name}`} target="_blank" rel="noopener noreferrer">
                   <img src={spotifylogo} alt="Spotify" className="search-icon" />
                   </a>
-                  <a href={`https://www.google.com/search?q=${query}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://www.google.com/search?q=${full_name}`} target="_blank" rel="noopener noreferrer">
                   <img src={googlelogo} alt="Google" className="search-icon" />
                   </a>
+                  <button className="add-button" onClick={() => playlist_add(song)}>
+                    Add to Playlist
+                  </button>
                 </div>
               </li>
               );
