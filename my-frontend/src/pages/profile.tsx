@@ -86,9 +86,9 @@ export default function Personality() {
         Find out your personality!
       </h3>
       <a href="/" className="home-link">Return to Home</a>
-      {submitted === false &&  questions.length > 0 && (
+      {submitted === false &&  questions.length > 0 && (//not submitted -> show the forms
         <form className='personality-form'>
-          {questions.map((q:any, index:number) => (
+          {questions.map((q:any, index:number) => (//goes through the questions in the list
             <div className='question-block' key = {q.id}>
               <label>{q.question}</label>
               <textarea

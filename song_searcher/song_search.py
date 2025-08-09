@@ -20,7 +20,7 @@ class Search:
         self.user_query = None 
         self.data = None
         self.current_result = None
-        self.engine = import_credentials()
+        #self.engine = import_credentials()
         self.parameters = None
 
     def load_sql(self): 
@@ -37,7 +37,9 @@ class Search:
         self.sql_query = self.load_sql()
         self.user_query = query
         self.parameters = {"q": self.user_query}
-        self.data = pd.read_sql(self.sql_query, con=self.engine, params = self.parameters)
+        engine = import_credentials() #fresh engine for connections
+        with engine.connect() as conn:
+            self.data = pd.read_sql(self.sql_query, con=conn, params=self.parameters)
         if not self.data.empty: 
             for ind, row in self.data.iterrows(): 
                 yield f"{row['name']} by {row['artist']}"
