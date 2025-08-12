@@ -1,6 +1,9 @@
 import React, {useState} from 'react';
 import './signinform.css';
 import {GoogleLogin} from '@react-oauth/google';
+import profilepng from '../pics/person.png'
+import emailpng from '../pics/email.png'
+import passpng from '../pics/password.png'
 
 export default function SigninForm({when_closed, when_logged_in}: {when_closed: () => void; when_logged_in: (username: string) => void}) {
   const [username, set_user] = useState('');
@@ -59,7 +62,7 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
       <div>
         <form onSubmit={(e) => {
           e.preventDefault();
-          const email_regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/; //did all this just to realise browser already default check for email format lol
+          const email_regex = /^[\w.-]+@([\w-]+\.)+[\w-]{2,}$/; //did all this just to realise browser already default check for email format lol
           if(!email_regex.test(email_reg)){
             set_message_reg("Invalid email format");
             return;
@@ -72,13 +75,22 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
         }}
         >
           <h5>Register</h5> 
-          <input type="text" placeholder="Username" value={username_reg} onChange={(e) => set_username_reg(e.target.value)} /> 
-          <input type="email" placeholder="Email" value={email_reg} onChange={(e) => set_email_reg(e.target.value)} />
-          <input type="password" placeholder="Password" value={pass_reg} onChange={(e) => set_pass_reg(e.target.value)} />
-          <button type="submit">Sign Up</button>
+          <div className='input'>
+            <img src={profilepng} alt=""/>
+            <input type="text" placeholder="Username" value={username_reg} onChange={(e) => set_username_reg(e.target.value)} /> 
+          </div>
+          <div className='input'>
+            <img src={emailpng} alt=""/>
+            <input type="email" placeholder="Email" value={email_reg} onChange={(e) => set_email_reg(e.target.value)} />
+          </div>
+          <div className='input'>
+            <img src={passpng} alt=""/>
+            <input type="password" placeholder="Password" value={pass_reg} onChange={(e) => set_pass_reg(e.target.value)} />
+          </div>
+          <button className='login-button' type="submit">Sign Up</button>
           {message_reg && <p>{message_reg}</p>}
         </form>
-        <p>Already have an account? <button onClick={() => set_register_toggle(false)}>Sign In</button></p>
+        <p>Already have an account? <button className='login-button' onClick={() => set_register_toggle(false)}>Sign In</button></p>
       </div>
     );
   } 
@@ -87,9 +99,15 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
       <div>
         <form onSubmit={login_handle}>
           <h5>Sign In</h5>
-          <input type="text" placeholder="Username" value={username} onChange={(e) => set_user(e.target.value)} />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => set_pass(e.target.value)} />
-          <button style={{marginBottom: "0.5rem"}} type="submit">Sign In</button>
+          <div className='input'>
+            <img src={profilepng} alt=""/>
+            <input type="text" placeholder="Username" value={username} onChange={(e) => set_user(e.target.value)} />
+          </div>
+          <div className='input'>
+            <img src={passpng} alt=""/>
+            <input type="password" placeholder="Password" value={password} onChange={(e) => set_pass(e.target.value)} />
+          </div>
+          <button className='login-button' type="submit">Sign In</button>
           {message && <p>{message}</p>}
         </form>
         <GoogleLogin 
@@ -110,7 +128,7 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
         }} 
         onError={() => console.error('Login failed')}
         />
-        <p>Don't have an account? <button onClick={() => set_register_toggle(true)}>Register</button></p>
+        <p className='this-is-just-for-this-one-margin'>Don't have an account? <button className='login-button' onClick={() => set_register_toggle(true)}>Register</button></p>
       </div>
     );
   }

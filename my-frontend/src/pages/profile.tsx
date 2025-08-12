@@ -97,7 +97,7 @@ export default function Personality() {
               />
             </div>
           ))}
-          <button type="button" onClick={handle_submit}>What's my personality?</button>
+          <button className='login-button' type="button" onClick={handle_submit}>What's my personality?</button>
         </form>
       )}
 
@@ -105,7 +105,7 @@ export default function Personality() {
         <div className='results-block'>
           <h2>Your personality:</h2>
           <p>{description}</p>
-          <button onClick={handle_get_playlist}> Get playlist</button>
+          <button className='login-button' onClick={handle_get_playlist}> Get playlist</button>
         </div>
       )}
       

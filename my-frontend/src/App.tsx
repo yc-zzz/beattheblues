@@ -120,8 +120,8 @@ function App() {
   } else if (popup && logged_in) {
     popup_content = (
       <div className='dropdown-menu'>
-        <p>Welcome, {username}!</p>
-        <button onClick={logout_handle}>Log out</button>
+        <p style={{fontSize:'18px', marginBottom:'0.5rem'}}>Welcome, {username}!</p>
+        <button className='login-button' onClick={logout_handle}>Log out</button>
       </div>
     );
   }
@@ -189,12 +189,11 @@ function App() {
             set_popup(true);
           } 
           else {
-            window.location.href = '/profile'; //TODO: change to <link> later instead preventing page reloads
+            window.location.href = '/profile'; 
           }
-        }}>Profile</a>
+        }}>Personality</a>
 
         <img src={defaultprofile} className='profile-icon' alt='Profile' onClick={() => set_popup(prev => !prev)} />
-
         {popup_content}
       </div>
 
