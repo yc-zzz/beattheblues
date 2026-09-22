@@ -86,9 +86,9 @@ export default function Personality() {
         Find out your personality!
       </h3>
       <a href="/" className="home-link">Return to Home</a>
-      {submitted === false &&  questions.length > 0 && (
+      {submitted === false &&  questions.length > 0 && (//not submitted -> show the forms
         <form className='personality-form'>
-          {questions.map((q:any, index:number) => (
+          {questions.map((q:any, index:number) => (//goes through the questions in the list
             <div className='question-block' key = {q.id}>
               <label>{q.question}</label>
               <textarea
@@ -97,7 +97,7 @@ export default function Personality() {
               />
             </div>
           ))}
-          <button type="button" onClick={handle_submit}>What's my personality?</button>
+          <button className='login-button' type="button" onClick={handle_submit}>What's my personality?</button>
         </form>
       )}
 
@@ -105,7 +105,7 @@ export default function Personality() {
         <div className='results-block'>
           <h2>Your personality:</h2>
           <p>{description}</p>
-          <button onClick={handle_get_playlist}> Get playlist</button>
+          <button className='login-button' onClick={handle_get_playlist}> Get playlist</button>
         </div>
       )}
       
@@ -124,7 +124,7 @@ export default function Personality() {
                   <a href={`https://www.youtube.com/results?search_query=${full_name}`} target="_blank" rel="noopener noreferrer">
                   <img src={youtubelogo} alt="YouTube" className="search-icon" />
                   </a>
-                  <a href={`https://open.spotify.com/search/${name}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://open.spotify.com/search/${encodeURI(`${name} ${artist}`)}`} target="_blank" rel="noopener noreferrer">
                   <img src={spotifylogo} alt="Spotify" className="search-icon" />
                   </a>
                   <a href={`https://www.google.com/search?q=${full_name}`} target="_blank" rel="noopener noreferrer">

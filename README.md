@@ -1,5 +1,5 @@
 # beat [the blues𝄞](https://beattheblues.vercel.app/)
-beat the blues𝄞 is a simple wep app where you can escape the monotonous recommendation algorithm of major music platforms.
+beat the blues𝄞 is a simple web app where you can escape the monotonous recommendation algorithm of major music platforms.
 Simply search a word or phrase, about anything. Be it your feelings, the weather, or gibberish, and there will always be a song recommended to you!
 
 ## Deployment

@@ -64,7 +64,7 @@ const Playlist = () => {
       content = (
         <ul className='song-list'> {/*using unordered list here for songs, better than making a new line after every song*/}
           {songs.map(song => {
-            const [song_name] = song.song.split(' by ');// again all this just for spotify
+            const spotify_name = song.song.replace(' by ', ' ');// again all this just for spotify
             return(
             <li key={song.id}> {/*key helps to identify each song with song id*/}
               🎵 {song.song}
@@ -75,7 +75,7 @@ const Playlist = () => {
                 <a href={`https://www.youtube.com/results?search_query=${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">
                 <img src={youtubelogo} alt="YouTube" className="search-icon" />
                 </a>
-                <a href={`https://open.spotify.com/search/${encodeURI(song_name)}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://open.spotify.com/search/${encodeURI(spotify_name)}`} target="_blank" rel="noopener noreferrer">
                 <img src={spotifylogo} alt="Spotify" className="search-icon" />
                 </a>
                 <a href={`https://www.google.com/search?q=${encodeURI(song.song)}`} target="_blank" rel="noopener noreferrer">

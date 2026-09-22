@@ -29,13 +29,13 @@ class Personality:
         self.answers = None
         self.user_descriptions = {}
         self.date = date.today()
-        self.engine = None
+        #self.engine = None
         self.client_error = False
 
     def load(self): 
         self.initialise = True
         self.questions = questions
-        self.engine = import_credentials()
+        #self.engine = import_credentials()
         
     def get_questions(self): 
         return self.questions 
@@ -133,7 +133,8 @@ class Personality:
                     FROM acousticbrainz_data
                     WHERE id IN ({placeholder})
             """
-            with self.engine.connect() as conn: 
-                recommendations = pd.read_sql(query, con=self.engine, params = tuple(top_k_list), index_col = 'id')
+            engine = import_credentials()
+            with engine.connect() as conn: 
+                recommendations = pd.read_sql(query, con=conn, params = tuple(top_k_list), index_col = 'id')
                 playlist = recommendations[['name', 'artist']].to_dict(orient = 'records')
                 return playlist

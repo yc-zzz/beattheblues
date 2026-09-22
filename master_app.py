@@ -5,7 +5,7 @@ from song_searcher.flask_app_search import search_app
 
 master_app = Flask(__name__)
 
-# Copy config from sub-apps (optional but safe)
+# Copy config from sub-apps 
 master_app.config.update(personality_app.config)
 master_app.config.update(reco_app.config)
 master_app.config.update(search_app.config)
