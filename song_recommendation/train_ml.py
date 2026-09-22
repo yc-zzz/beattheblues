@@ -9,12 +9,14 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import os
 import random
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from dotenv import load_dotenv
 from keras.layers import Dense, LeakyReLU
 from keras.models import Sequential
 from sentence_transformers import SentenceTransformer
@@ -22,10 +24,14 @@ from sklearn.model_selection import train_test_split
 from sqlalchemy import text
 
 try:  # Supports both ``python -m`` and direct execution.
-    from song_recommendation.evaluation import evaluate_retrieval, save_evaluation_artifacts
+    from song_recommendation.evaluation import (
+        evaluate_retrieval, save_evaluation_artifacts, save_test_vector_artifacts,
+    )
+    from song_recommendation.gcs_artifacts import upload_artifacts
     from song_recommendation.model_utils import cosine_similarity_loss, import_credentials
 except ModuleNotFoundError:
-    from evaluation import evaluate_retrieval, save_evaluation_artifacts
+    from evaluation import evaluate_retrieval, save_evaluation_artifacts, save_test_vector_artifacts
+    from gcs_artifacts import upload_artifacts
     from model_utils import cosine_similarity_loss, import_credentials
 
 
@@ -154,7 +160,9 @@ def train_and_evaluate(
     epochs: int = 10,
     batch_size: int = 32,
     encoder_name: str = DEFAULT_ENCODER,
-) -> tuple[Sequential, pd.DataFrame, dict, dict, pd.DataFrame]:
+) -> tuple[
+    Sequential, pd.DataFrame, dict, dict, pd.DataFrame, np.ndarray, np.ndarray, np.ndarray
+]:
     """Fit on 80%, retrieve the held-out 20% against the full catalogue."""
     if not 0 < test_size < 1:
         raise ValueError("test_size must be between zero and one.")
@@ -183,48 +191,86 @@ def train_and_evaluate(
         data, pd.Index(test_ids), encoder_name=encoder_name, batch_size=batch_size
     )
     predictions = model.predict(test_embeddings, verbose=0)
-    metrics, details = evaluate_retrieval(predictions, test_ids, targets.to_numpy(), targets.index)
+    metrics, details, top_retrieved_vectors = evaluate_retrieval(
+        predictions, test_ids, targets.to_numpy(), targets.index
+    )
     metrics["split"] = {
         "train_fraction": 1 - test_size, "test_fraction": test_size,
         "random_state": random_state, "n_train": int(len(train_ids)), "n_test": int(len(test_ids)),
     }
     metadata["encoder"] = encoder_name
-    return model, targets, metadata, metrics, details
+    true_test_vectors = targets.loc[test_ids].to_numpy(dtype=np.float32)
+    return (
+        model, targets, metadata, metrics, details, true_test_vectors,
+        predictions, top_retrieved_vectors,
+    )
 
 
 def persist_artifacts(
     model: Sequential, targets: pd.DataFrame, metadata: dict, metrics: dict,
-    details: pd.DataFrame, *, write_database: bool,
+    details: pd.DataFrame, true_test_vectors: np.ndarray,
+    model_predicted_vectors: np.ndarray, top_retrieved_vectors: np.ndarray,
+    *, write_database: bool,
+    gcs_bucket_uri: str | None = None,
 ) -> None:
     """Save the trained model, its catalogue vectors, and evaluation evidence."""
     metric_path, detail_path = save_evaluation_artifacts(metrics, details, MODULE_DIR / "evaluation_results")
+    vector_paths = save_test_vector_artifacts(
+        true_test_vectors, model_predicted_vectors, top_retrieved_vectors,
+        MODULE_DIR / "evaluation_results",
+    )
+    artifact_paths = [metric_path, detail_path, *vector_paths]
     if write_database:
         engine = import_credentials()
         targets.to_sql("song_vector", engine, if_exists="replace", index=True, index_label="id")
         with engine.begin() as connection:
             connection.execute(text("ALTER TABLE song_vector ADD PRIMARY KEY (id)"))
-        model.save(MODULE_DIR / "ml_vector_reduction.keras")
-        with (MODULE_DIR / "model_metadata.json").open("w", encoding="utf-8") as handle:
-            json.dump(metadata, handle, indent=2)
     else:
-        print("Skipped model and database replacement (--no-write-db).")
+        print("Skipped song_vector replacement (--no-write-db).")
+    model_path = MODULE_DIR / "ml_vector_reduction.keras"
+    metadata_path = MODULE_DIR / "model_metadata.json"
+    model.save(model_path)
+    with metadata_path.open("w", encoding="utf-8") as handle:
+        json.dump(metadata, handle, indent=2)
+    artifact_paths.extend((model_path, metadata_path))
     print(f"Saved evaluation metrics to {metric_path}")
     print(f"Saved query-level predictions to {detail_path}")
+    print(f"Saved true and predicted test vectors to {metric_path.parent}")
+    if gcs_bucket_uri:
+        uploaded_uris = upload_artifacts(gcs_bucket_uri, artifact_paths)
+        print("Uploaded artifacts to Google Cloud Storage:")
+        for artifact_uri in uploaded_uris:
+            print(f"  {artifact_uri}")
 
 
 def main() -> None:
+    # Load GCS configuration and Application Default Credential settings before
+    # argparse reads the environment-backed default below.
+    load_dotenv()
     parser = argparse.ArgumentParser(description="Train and audit the song recommender.")
     parser.add_argument("--data-csv", help="Use a local CSV instead of acousticbrainz_data.")
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument("--no-write-db", action="store_true", help="Do not replace the song_vector table.")
+    parser.add_argument(
+        "--gcs-bucket-uri",
+        default=os.getenv("GCS_BUCKET_URI"),
+        help="GCS destination, e.g. gs://my-bucket/song-recommendation (or set GCS_BUCKET_URI).",
+    )
     args = parser.parse_args()
     data = load_song_data(args.data_csv)
-    model, targets, metadata, metrics, details = train_and_evaluate(
+    (
+        model, targets, metadata, metrics, details, true_test_vectors,
+        model_predicted_vectors, top_retrieved_vectors,
+    ) = train_and_evaluate(
         data, epochs=args.epochs, batch_size=args.batch_size, random_state=args.random_state,
     )
-    persist_artifacts(model, targets, metadata, metrics, details, write_database=not args.no_write_db)
+    persist_artifacts(
+        model, targets, metadata, metrics, details, true_test_vectors,
+        model_predicted_vectors, top_retrieved_vectors,
+        write_database=not args.no_write_db, gcs_bucket_uri=args.gcs_bucket_uri,
+    )
     print(json.dumps(metrics, indent=2))
 
 

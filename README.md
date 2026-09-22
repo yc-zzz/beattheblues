@@ -28,3 +28,36 @@ to `song_recommendation/evaluation_results/`. Use `--no-write-db` to run an
 audit without replacing the catalogue table, or `--data-csv path/to/data.csv`
 for a local dataset.
 
+### Store model artifacts in Google Cloud Storage
+
+Put the bucket URI (not the Google Cloud Console URL) in the environment where
+you run training, for example in the root `.env` file:
+
+```dotenv
+GCS_BUCKET_URI=gs://your-bucket-name/song-recommendation
+```
+
+The optional path after the bucket name is the object prefix. Every training
+run uploads the trained `.keras` model, its metadata, evaluation metrics,
+query-level evaluation CSV, and the following aligned NumPy evaluation
+artifacts to that location, including when `--no-write-db` is used:
+
+- `evaluation_true_test_vectors.npy`: answer-key target vectors, shape `(n_test, n_features)`.
+- `evaluation_model_predicted_test_vectors.npy`: raw model outputs, shape `(n_test, n_features)`.
+- `evaluation_top_10_predicted_test_vectors.npy`: the target vectors of the ten
+  highest-ranked retrieved songs, shape `(n_test, 10, n_features)`.
+
+Rows are aligned with `evaluation_predictions.csv`; that file identifies the
+true song and the song corresponding to each retrieved-vector position. You
+may instead provide the bucket URI per run:
+
+```sh
+python song_recommendation/train_ml.py --epochs 10 \
+  --gcs-bucket-uri gs://your-bucket-name/song-recommendation
+```
+
+The runtime needs Google Application Default Credentials with permission to
+create objects in that bucket. For local training, set
+`GOOGLE_APPLICATION_CREDENTIALS` to the path of a service-account JSON key; on
+a GCP runtime, attach a service account with an object-writer role instead.
+
