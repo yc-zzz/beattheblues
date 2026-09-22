@@ -33,6 +33,8 @@ class Recommendation:
        
     def load(self):
         import os
+        import json
+        from pathlib import Path
         os.environ["HF_HOME"] = "/tmp" #Prevent memory spikes by disabling SentenceTransformer's cache
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1" #disable GPU since Render doesn't use GPU
 
@@ -48,7 +50,15 @@ class Recommendation:
         model_path = os.path.join(os.path.dirname(__file__), 'ml_vector_reduction.keras')
         engine = import_credentials() #engine instead of self.engine to force fresh engines
         self.ml_model = load_model(model_path, custom_objects={"cosine_similarity_loss": cosine_similarity_loss})
-        self.nlp_model = SentenceTransformer('paraphrase-MiniLM-L3-v2')
+        # The query encoder must be identical to the encoder used while
+        # training the vector-reduction model.  Older artefacts have no
+        # metadata, so retain the historical training encoder as a fallback.
+        metadata_path = Path(__file__).with_name('model_metadata.json')
+        encoder_name = 'all-MiniLM-L6-v2'
+        if metadata_path.exists():
+            with metadata_path.open(encoding='utf-8') as handle:
+                encoder_name = json.load(handle).get('encoder', encoder_name)
+        self.nlp_model = SentenceTransformer(encoder_name)
 
         try:
             with engine.connect() as conn:
@@ -63,7 +73,7 @@ class Recommendation:
     def generate_25d_vector(self, query):
         self.current_query = query
         user_embed = self.nlp_model.encode(self.current_query).reshape(1, -1)
-        pred  = self.ml_model.predict(user_embed)
+        pred  = self.ml_model.predict(user_embed, verbose=0)
         return pred  
     
     def obscure_algo(self, vector, k=15):

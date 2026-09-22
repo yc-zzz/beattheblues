@@ -1,0 +1,30 @@
+# Version control and local environments
+.git/
+.gitignore
+.venv/
+venv/
+**/__pycache__/
+**/*.py[cod]
+
+# Credentials must be provided to the Google Cloud job at runtime, for example
+# through Secret Manager; never include them in the image build context.
+.env
+.env.*
+*.pem
+*.key
+
+# Generated training outputs and local tooling
+song_recommendation/evaluation_results/
+song_recommendation/model_metadata.json
+song_recommendation/*.keras
+.DS_Store
+.pytest_cache/
+.mypy_cache/
+
+# Unrelated applications. The Dockerfile copies only song_recommendation.
+my-frontend/
+my-backend/
+personality_test/
+song_searcher/
+master_app.py
+Procfile

@@ -8,14 +8,10 @@ import tensorflow as tf
 def import_credentials(): 
     load_dotenv()
     try: 
-        db_user = os.environ["DB_USER"]
-        db_password = os.environ["DB_PASSWORD"]
-        db_host = os.environ["DB_HOST"]
-        db_name = os.environ["DB_NAME"]
+        db_url = os.environ["NEON_CONNECTION_STRING"]
     except Exception as e: 
-        raise RuntimeError("Missing environment variable: ", e)
+        raise RuntimeError("Missing connection string: ", e)
 
-    db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}?sslmode=require"
     engine = create_engine(db_url)
     return engine
 
