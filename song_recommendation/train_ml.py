@@ -2,7 +2,7 @@
 
 Run ``python song_recommendation/train_ml.py --epochs 10``. The model splits
 songs 80/20 before generating four descriptions for every song, then retrieves
-songs for the held-out descriptions.
+held-out descriptions only from the held-out song vectors.
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from dotenv import load_dotenv
-from keras.layers import Dense, LeakyReLU
-from keras.models import Sequential
+from keras.layers import Concatenate, Dense, Input, LeakyReLU
+from keras.models import Model
 from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
 from sqlalchemy import text
@@ -30,11 +30,11 @@ try:  # Supports both ``python -m`` and direct execution.
         evaluate_retrieval, save_evaluation_artifacts, save_test_vector_artifacts,
     )
     from song_recommendation.gcs_artifacts import upload_artifacts
-    from song_recommendation.model_utils import cosine_similarity_loss, import_credentials
+    from song_recommendation.model_utils import CombinedRetrievalLoss, import_credentials
 except ModuleNotFoundError:
     from evaluation import evaluate_retrieval, save_evaluation_artifacts, save_test_vector_artifacts
     from gcs_artifacts import upload_artifacts
-    from model_utils import cosine_similarity_loss, import_credentials
+    from model_utils import CombinedRetrievalLoss, import_credentials
 
 
 MODULE_DIR = Path(__file__).resolve().parent
@@ -58,16 +58,21 @@ MIREX_DESCRIPTIONS = {
 }
 DESCRIPTION_TEMPLATES = (
     "{name} by {artist} ({year}) is a {timbre} {genre} track with a {happy} mood and a {sad} emotional shade. "
-    "Its {dance} pulse meets {party} social energy, while the overall feel is {relaxed} and {aggressive}. It is also {mirex}. "
-    "The production balances {acoustic} and {electronic} textures with {tonal} harmony and a {voice} {gender} performance. ", 
+    "Its {dance} pulse meets {party} social energy, while the overall feel is {relaxed} and {aggressive}. "
+    "Its MIREX vibe cluster is {mirex_cluster}: {mirex}. "
+    "The production balances {acoustic} and {electronic} textures with {tonal} harmony. "
+    "Performance gender: {gender}. Vocal presence: {voice}.",
     "Looking for {genre} music? {name} by {artist} ({year}) offers a {happy}, {sad} atmosphere with {dance} movement and {party} appeal. "
     "Expect a {relaxed} yet {aggressive} character, combining {acoustic} and {electronic} elements, {timbre} colour, and {tonal} writing. "
-    "It features a {voice} {gender} delivery and a {mirex} MIREX profile.",
+    "Performance gender: {gender}. Vocal presence: {voice}. "
+    "Its MIREX vibe cluster is {mirex_cluster}: {mirex}.",
     "Analytically, {name} by {artist} ({year}) is a {genre} recording whose mood is {happy} and whose sadness is {sad}. "
     "Its energy is {dance}, {party}, {relaxed}, and {aggressive}; its arrangement is {acoustic}, {electronic}, {timbre}, and {tonal}. "
-    "The {voice} {gender} performance supports a {mirex} MIREX character.",
+    "Performance gender: {gender}; vocal presence: {voice}. "
+    "Its MIREX vibe cluster is {mirex_cluster}: {mirex}.",
     "{name} by {artist} ({year}): a {timbre} {genre} song with {happy} mood and {sad} undertones; {dance} motion, {party} energy, {relaxed} pacing, and {aggressive} force; "
-    "{acoustic} and {electronic} production, {tonal} harmony, a {voice} {gender} delivery, and a {mirex} MIREX identity.",
+    "{acoustic} and {electronic} production, {tonal} harmony, performance gender {gender}, and vocal presence {voice}. "
+    "Its MIREX vibe cluster is {mirex_cluster}: {mirex}.",
 )
 TEMPLATE_COUNT = len(DESCRIPTION_TEMPLATES)
 
@@ -173,9 +178,9 @@ def _description_context(song: pd.Series, *, random_state: int, template_id: int
         "name": str(song["name"]), "artist": str(song["artist"]), "year": str(song["year"]),
         "gender": str(song["gender"]),
         "genre": GENRE_NAMES.get(str(song["genre"]).lower(), str(song["genre"])),
-        "mirex": _seeded_choice(
-            MIREX_DESCRIPTIONS.get(str(song["mirex"]).lower(), (str(song["mirex"]),)),
-            random_state=random_state, song_id=song_id, template_id=template_id, column_name="mirex",
+        "mirex_cluster": str(song["mirex"]),
+        "mirex": ", ".join(
+            MIREX_DESCRIPTIONS.get(str(song["mirex"]).lower(), (str(song["mirex"]),))
         ),
     })
     return context
@@ -213,6 +218,82 @@ def generate_split_descriptions(
     return descriptions, generated_ids
 
 
+def _feature_bin_indices(value: float) -> tuple[int, ...]:
+    """Return every overlapping language bin that faithfully describes value."""
+    return tuple(index for index, (lower, upper) in enumerate(VALUE_BINS) if lower <= value <= upper)
+
+
+def _same_or_adjacent_bin(true_value: float, retrieved_value: float) -> bool:
+    """Whether two values can be described by the same or adjacent bins."""
+    true_bins = _feature_bin_indices(true_value)
+    retrieved_bins = _feature_bin_indices(retrieved_value)
+    return any(abs(true_bin - retrieved_bin) <= 1 for true_bin in true_bins for retrieved_bin in retrieved_bins)
+
+
+def build_manual_song_description_comparison(
+    *,
+    data: pd.DataFrame,
+    true_song_ids: pd.Index,
+    true_descriptions: list[str],
+    template_ids: np.ndarray,
+    details: pd.DataFrame,
+    random_state: int,
+) -> pd.DataFrame:
+    """Create the requested human-readable feature audit for top-1 retrievals."""
+    if not (len(true_song_ids) == len(true_descriptions) == len(template_ids) == len(details)):
+        raise ValueError("Manual comparison inputs must have one row per evaluated description.")
+    if "top_1_song_id" not in details:
+        raise ValueError("Retrieval details must include top_1_song_id.")
+
+    rows = []
+    for query_row, (true_id, true_description, template_id, top_id) in enumerate(zip(
+        true_song_ids.astype(str), true_descriptions, template_ids, details["top_1_song_id"].astype(str),
+    )):
+        true_song = data.loc[true_id]
+        top_song = data.loc[top_id]
+        row = {
+            "query_row": query_row,
+            "template_id": int(template_id),
+            "true_song_id": true_id,
+            "true_description": true_description,
+            "top_1_song_id": top_id,
+            "top_1_description": generate_description(
+                top_song, random_state=random_state, template_id=int(template_id)
+            ),
+            "true_year": int(true_song["year"]),
+            "top_1_year": int(top_song["year"]),
+            "year_difference": int(top_song["year"]) - int(true_song["year"]),
+        }
+        numeric_score = 0
+        for column in NUMERIC_COLUMNS:
+            true_value = float(true_song[column])
+            top_value = float(top_song[column])
+            correct = _same_or_adjacent_bin(true_value, top_value)
+            row.update({
+                f"{column}_true_value": true_value,
+                f"{column}_top_1_value": top_value,
+                f"{column}_true_bins": "|".join(map(str, _feature_bin_indices(true_value))),
+                f"{column}_top_1_bins": "|".join(map(str, _feature_bin_indices(top_value))),
+                f"{column}_same_or_adjacent": int(correct),
+            })
+            numeric_score += int(correct)
+        categorical_score = 0
+        for column in CATEGORICAL_COLUMNS:
+            correct = str(true_song[column]) == str(top_song[column])
+            row.update({
+                f"{column}_true": str(true_song[column]),
+                f"{column}_top_1": str(top_song[column]),
+                f"{column}_exact_match": int(correct),
+            })
+            categorical_score += int(correct)
+        row["numeric_feature_score"] = numeric_score
+        row["categorical_feature_score"] = categorical_score
+        row["feature_score_total"] = numeric_score + categorical_score
+        row["feature_score_possible"] = len(NUMERIC_COLUMNS) + len(CATEGORICAL_COLUMNS)
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
 def make_target_vectors(data: pd.DataFrame, train_ids: pd.Index) -> tuple[pd.DataFrame, dict]:
     """Build target vectors using preprocessing fitted on training songs only."""
     train = data.loc[train_ids]
@@ -247,15 +328,30 @@ def load_song_data(csv_path: str | None = None) -> pd.DataFrame:
     return data.loc[~data.index.duplicated(keep="first")].copy()
 
 
-def build_model(input_dimensions: int, output_dimensions: int) -> Sequential:
-    return Sequential([
-        Dense(128, input_shape=(input_dimensions,)), LeakyReLU(negative_slope=0.1),
-        Dense(64, activation="relu"), Dense(output_dimensions),
-    ])
+def build_model(input_dimensions: int, category_levels: dict[str, list[str]]) -> Model:
+    """Build regression and categorical-softmax heads joined for retrieval."""
+    inputs = Input(shape=(input_dimensions,), name="sentence_embedding")
+    hidden = Dense(128)(inputs)
+    hidden = LeakyReLU(negative_slope=0.1)(hidden)
+    hidden = Dense(64, activation="relu")(hidden)
+
+    # AcousticBrainz numeric features are bounded, while standardised year is
+    # not.  Keep their output domains separate before joining the retrieval
+    # representation in the established target-column order.
+    numeric_features = Dense(len(NUMERIC_COLUMNS), activation="sigmoid", name="numeric_features")(hidden)
+    year_standardised = Dense(1, name="year_standardised")(hidden)
+    output_heads = [numeric_features, year_standardised]
+    for column in CATEGORICAL_COLUMNS:
+        levels = category_levels[column]
+        if len(levels) < 2:
+            raise ValueError(f"{column} needs at least two training categories for a softmax head.")
+        output_heads.append(Dense(len(levels), activation="softmax", name=f"{column}_probabilities")(hidden))
+    retrieval_vector = Concatenate(name="retrieval_vector")(output_heads)
+    return Model(inputs=inputs, outputs=retrieval_vector, name="song_retrieval_multi_head")
 
 
 def train_in_batches(
-    model: Sequential,
+    model: Model,
     embeddings: np.ndarray,
     targets: np.ndarray,
     *,
@@ -301,9 +397,9 @@ def train_and_evaluate(
     batch_size: int = 32,
     encoder_name: str = DEFAULT_ENCODER,
 ) -> tuple[
-    Sequential, pd.DataFrame, dict, dict, pd.DataFrame, np.ndarray, np.ndarray, np.ndarray
+    Model, pd.DataFrame, dict, dict, pd.DataFrame, np.ndarray, np.ndarray, np.ndarray, pd.DataFrame
 ]:
-    """Fit on 80%, retrieve the held-out 20% against the full catalogue."""
+    """Fit on 80%, retrieve each held-out description against held-out songs."""
     if not 0 < test_size < 1:
         raise ValueError("test_size must be between zero and one.")
     if len(data) < 2:
@@ -337,8 +433,17 @@ def train_and_evaluate(
     train_embeddings = encode_descriptions(
         train_descriptions, encoder_name=encoder_name, batch_size=batch_size
     )
-    model = build_model(train_embeddings.shape[1], targets.shape[1])
-    model.compile(optimizer="adam", loss=cosine_similarity_loss)
+    categorical_sizes = tuple(len(metadata["category_levels"][column]) for column in CATEGORICAL_COLUMNS)
+    model = build_model(train_embeddings.shape[1], metadata["category_levels"])
+    model.compile(
+        optimizer="adam",
+        loss=CombinedRetrievalLoss(
+            numeric_size=len(NUMERIC_COLUMNS) + 1,
+            categorical_sizes=categorical_sizes,
+            lambda_numeric=1.0,
+            lambda_categorical=1.0,
+        ),
+    )
     train_in_batches(
         model, train_embeddings, train_targets,
         epochs=epochs, batch_size=batch_size, random_state=random_state,
@@ -349,8 +454,12 @@ def train_and_evaluate(
         test_descriptions, encoder_name=encoder_name, batch_size=batch_size
     )
     predictions = model.predict(test_embeddings, verbose=0)
+    # Experiment 3 deliberately uses a held-out-only candidate catalogue.
+    # Training-song vectors therefore cannot be retrieved for test queries.
+    test_candidate_vectors = targets.loc[test_song_ids]
     metrics, details, top_retrieved_vectors = evaluate_retrieval(
-        predictions, test_description_song_ids, targets.to_numpy(), targets.index
+        predictions, test_description_song_ids,
+        test_candidate_vectors.to_numpy(), test_candidate_vectors.index,
     )
     metrics["split"] = {
         "train_fraction": 1 - test_size, "test_fraction": test_size,
@@ -358,20 +467,36 @@ def train_and_evaluate(
         "n_train_songs": int(len(train_song_ids)), "n_test_songs": int(len(test_song_ids)),
         "n_train_descriptions": int(len(train_descriptions)), "n_test_descriptions": int(len(test_descriptions)),
         "descriptions_per_song": TEMPLATE_COUNT,
+        "candidate_catalogue": "test_only",
     }
-    metadata["encoder"] = encoder_name
-    metadata["description_templates"] = TEMPLATE_COUNT
+    metadata.update({
+        "encoder": encoder_name,
+        "description_templates": TEMPLATE_COUNT,
+        "model_type": "numeric_mse_plus_categorical_cross_entropy",
+        "loss_weights": {"numeric": 1.0, "categorical": 1.0},
+        "candidate_catalogue": "test_only",
+    })
     true_test_vectors = test_targets
+    template_ids = np.tile(np.arange(TEMPLATE_COUNT, dtype=int), len(test_song_ids))
+    manual_comparison = build_manual_song_description_comparison(
+        data=data,
+        true_song_ids=test_description_song_ids,
+        true_descriptions=test_descriptions,
+        template_ids=template_ids,
+        details=details,
+        random_state=random_state,
+    )
     return (
         model, targets, metadata, metrics, details, true_test_vectors,
-        predictions, top_retrieved_vectors,
+        predictions, top_retrieved_vectors, manual_comparison,
     )
 
 
 def persist_artifacts(
-    model: Sequential, targets: pd.DataFrame, metadata: dict, metrics: dict,
+    model: Model, targets: pd.DataFrame, metadata: dict, metrics: dict,
     details: pd.DataFrame, true_test_vectors: np.ndarray,
     model_predicted_vectors: np.ndarray, top_retrieved_vectors: np.ndarray,
+    manual_comparison: pd.DataFrame,
     *, write_database: bool,
     gcs_bucket_uri: str | None = None,
 ) -> None:
@@ -381,7 +506,9 @@ def persist_artifacts(
         true_test_vectors, model_predicted_vectors, top_retrieved_vectors,
         MODULE_DIR / "evaluation_results",
     )
-    artifact_paths = [metric_path, detail_path, *vector_paths]
+    manual_comparison_path = metric_path.parent / "manual_top_1_song_description_comparison.csv"
+    manual_comparison.to_csv(manual_comparison_path, index=False)
+    artifact_paths = [metric_path, detail_path, *vector_paths, manual_comparison_path]
     if write_database:
         engine = import_credentials()
         targets.to_sql("song_vector", engine, if_exists="replace", index=True, index_label="id")
@@ -398,6 +525,7 @@ def persist_artifacts(
     print(f"Saved evaluation metrics to {metric_path}")
     print(f"Saved query-level predictions to {detail_path}")
     print(f"Saved true and predicted test vectors to {metric_path.parent}")
+    print(f"Saved manual top-1 comparison to {manual_comparison_path}")
     if gcs_bucket_uri:
         uploaded_uris = upload_artifacts(gcs_bucket_uri, artifact_paths)
         print("Uploaded artifacts to Google Cloud Storage:")
@@ -411,7 +539,7 @@ def main() -> None:
     load_dotenv()
     parser = argparse.ArgumentParser(description="Train and audit the song recommender.")
     parser.add_argument("--data-csv", help="Use a local CSV instead of acousticbrainz_data.")
-    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument("--no-write-db", action="store_true", help="Do not replace the song_vector table.")
@@ -424,13 +552,13 @@ def main() -> None:
     data = load_song_data(args.data_csv)
     (
         model, targets, metadata, metrics, details, true_test_vectors,
-        model_predicted_vectors, top_retrieved_vectors,
+        model_predicted_vectors, top_retrieved_vectors, manual_comparison,
     ) = train_and_evaluate(
         data, epochs=args.epochs, batch_size=args.batch_size, random_state=args.random_state,
     )
     persist_artifacts(
         model, targets, metadata, metrics, details, true_test_vectors,
-        model_predicted_vectors, top_retrieved_vectors,
+        model_predicted_vectors, top_retrieved_vectors, manual_comparison,
         write_database=not args.no_write_db, gcs_bucket_uri=args.gcs_bucket_uri,
     )
     print(json.dumps(metrics, indent=2))

@@ -1,5 +1,5 @@
 # Libraries
-from song_recommendation.model_utils import import_credentials, cosine_similarity_loss
+from song_recommendation.model_utils import CombinedRetrievalLoss, cosine_similarity_loss, import_credentials
 import pandas as pd
 import faiss
 import numpy as np
@@ -49,7 +49,14 @@ class Recommendation:
         
         model_path = os.path.join(os.path.dirname(__file__), 'ml_vector_reduction.keras')
         engine = import_credentials() #engine instead of self.engine to force fresh engines
-        self.ml_model = load_model(model_path, custom_objects={"cosine_similarity_loss": cosine_similarity_loss})
+        self.ml_model = load_model(
+            model_path,
+            custom_objects={
+                "cosine_similarity_loss": cosine_similarity_loss,
+                "CombinedRetrievalLoss": CombinedRetrievalLoss,
+            },
+            compile=False,
+        )
         # The query encoder must be identical to the encoder used while
         # training the vector-reduction model.  Older artefacts have no
         # metadata, so retain the historical training encoder as a fallback.
