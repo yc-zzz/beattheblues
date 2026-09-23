@@ -15,14 +15,15 @@ As the web services are free tier, the deployed backend may take up to 50 second
 ## Recommendation-model audit
 
 Retrain with a reproducible 80/20 song split and evaluate the held-out
-bootstrapped descriptions with:
+descriptions with:
 
 ```sh
 python song_recommendation/train_ml.py --epochs 10
 ```
 
-This needs the `NEON_CONNECTION_STRING` environment variable for the
-acousticbrainz database. It updates the model and
+Each song receives four deterministic, feature-complete description templates
+after the split, so no song appears in both train and test data. This needs the
+`NEON_CONNECTION_STRING` environment variable for the acousticbrainz database. It updates the model and
 `song_vector` catalogue, and writes the aggregate metrics and per-query ranks
 to `song_recommendation/evaluation_results/`. Use `--no-write-db` to run an
 audit without replacing the catalogue table, or `--data-csv path/to/data.csv`
@@ -60,4 +61,3 @@ The runtime needs Google Application Default Credentials with permission to
 create objects in that bucket. For local training, set
 `GOOGLE_APPLICATION_CREDENTIALS` to the path of a service-account JSON key; on
 a GCP runtime, attach a service account with an object-writer role instead.
-

@@ -4,3 +4,6 @@
 __pycache__/
 *.py[cod]
 song_recommendation/raw_data/*.zip
+*.npy
+*.csv
+*.json
