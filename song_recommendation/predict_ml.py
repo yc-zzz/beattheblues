@@ -1,5 +1,13 @@
 # Libraries
-from song_recommendation.model_utils import CombinedRetrievalLoss, cosine_similarity_loss, import_credentials
+from song_recommendation.model_utils import (
+    CombinedRetrievalLoss,
+    CoralOrdinalHead,
+    CumulativeToClassProbabilities,
+    EqualHeadCategoricalCrossEntropy,
+    EqualFeatureCoralCategoricalLoss,
+    cosine_similarity_loss,
+    import_credentials,
+)
 import pandas as pd
 import faiss
 import numpy as np
@@ -42,7 +50,6 @@ class Recommendation:
             return
         print("Loading ML model and data...")
 
-        from tensorflow import keras
         from keras.models import load_model
         from sentence_transformers import SentenceTransformer
         import os
@@ -54,6 +61,10 @@ class Recommendation:
             custom_objects={
                 "cosine_similarity_loss": cosine_similarity_loss,
                 "CombinedRetrievalLoss": CombinedRetrievalLoss,
+                "EqualHeadCategoricalCrossEntropy": EqualHeadCategoricalCrossEntropy,
+                "CoralOrdinalHead": CoralOrdinalHead,
+                "CumulativeToClassProbabilities": CumulativeToClassProbabilities,
+                "EqualFeatureCoralCategoricalLoss": EqualFeatureCoralCategoricalLoss,
             },
             compile=False,
         )

@@ -48,6 +48,12 @@ artifacts to that location, including when `--no-write-db` is used:
 - `evaluation_top_10_predicted_test_vectors.npy`: the target vectors of the ten
   highest-ranked retrieved songs, shape `(n_test, 10, n_features)`.
 
+The first run for a particular generated train/test description set also
+stores its SentenceTransformer outputs beneath
+`embedding_cache/<fingerprint>/`. Later runs with the same descriptions,
+split, seed, and encoder download those arrays and skip re-encoding. Changing
+the template text, source data, split, seed, or encoder creates a new cache.
+
 Rows are aligned with `evaluation_predictions.csv`; that file identifies the
 true song and the song corresponding to each retrieved-vector position. You
 may instead provide the bucket URI per run:
@@ -56,6 +62,13 @@ may instead provide the bucket URI per run:
 python song_recommendation/train_ml.py --epochs 10 \
   --gcs-bucket-uri gs://your-bucket-name/song-recommendation
 ```
+
+To additionally calculate each held-out description's exact rank across the
+entire evaluation catalogue and save full MRR, add `--compute-full-mrr`. The
+calculation uses bounded query/candidate score tiles rather than allocating an
+all-query-by-all-candidate matrix; it adds evaluation time, but writes
+`full_rank` to `evaluation_predictions.csv` and `full_ranking.mrr` to the
+metrics JSON.
 
 The runtime needs Google Application Default Credentials with permission to
 create objects in that bucket. For local training, set

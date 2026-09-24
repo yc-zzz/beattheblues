@@ -18,6 +18,9 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 DEFAULT_K_VALUES = (1, 5, 10)
+DEFAULT_FULL_RANK_QUERY_BATCH_SIZE = 128
+DEFAULT_FULL_RANK_CANDIDATE_BATCH_SIZE = 4_096
+DEFAULT_FULL_RANK_MAX_WORKING_MEMORY_MB = 128
 TEST_VECTOR_ARTIFACT_FILENAMES = {
     "true": "evaluation_true_test_vectors.npy",
     "model_predictions": "evaluation_model_predicted_test_vectors.npy",
@@ -36,12 +39,152 @@ def _as_builtin(value):
     return value.item() if isinstance(value, np.generic) else value
 
 
+def _validate_full_rank_inputs(
+    predicted_vectors: np.ndarray,
+    true_song_ids: np.ndarray,
+    candidate_vectors: np.ndarray,
+    candidate_song_ids: np.ndarray,
+) -> np.ndarray:
+    """Validate rank inputs and locate every query's true candidate vector."""
+    if predicted_vectors.ndim != 2 or candidate_vectors.ndim != 2:
+        raise ValueError("Predicted and candidate vectors must be two-dimensional.")
+    if predicted_vectors.shape[1] != candidate_vectors.shape[1]:
+        raise ValueError("Predicted and candidate vectors must have the same width.")
+    if predicted_vectors.shape[0] != len(true_song_ids):
+        raise ValueError("Each predicted vector must have one true song id.")
+    if candidate_vectors.shape[0] != len(candidate_song_ids):
+        raise ValueError("Each candidate vector must have one song id.")
+    if not len(candidate_song_ids):
+        raise ValueError("The candidate catalogue is empty.")
+    if len(np.unique(candidate_song_ids)) != len(candidate_song_ids):
+        raise ValueError("Candidate song ids must be unique for full-rank evaluation.")
+    true_candidate_indices = pd.Index(candidate_song_ids).get_indexer(true_song_ids)
+    if (true_candidate_indices < 0).any():
+        missing_ids = np.unique(true_song_ids[true_candidate_indices < 0])[:5].tolist()
+        raise ValueError(f"The candidate catalogue is missing true song ids: {missing_ids}")
+    return true_candidate_indices
+
+
+def _bounded_full_ranks(
+    normalised_predicted_vectors: np.ndarray,
+    true_candidate_indices: np.ndarray,
+    normalised_candidate_vectors: np.ndarray,
+    *,
+    query_batch_size: int,
+    candidate_batch_size: int,
+    max_working_memory_mb: int,
+    tie_tolerance: float,
+) -> np.ndarray:
+    """Compute exact ranks without materialising all query-candidate scores.
+
+    A batch only holds ``query_batch_size * candidate_batch_size`` float32
+    scores, plus two boolean comparison masks. The effective candidate-batch
+    size is reduced automatically when the requested tile exceeds the memory
+    budget. Candidate-index tie breaking yields deterministic ranks for songs
+    with identical retrieval vectors.
+    """
+    if query_batch_size <= 0 or candidate_batch_size <= 0:
+        raise ValueError("Full-rank batch sizes must be positive.")
+    if max_working_memory_mb <= 0:
+        raise ValueError("max_working_memory_mb must be positive.")
+    if tie_tolerance < 0:
+        raise ValueError("tie_tolerance must be non-negative.")
+
+    # float32 scores consume four bytes; the greater-than and tie masks use
+    # roughly two more. Reserve a conservative ten bytes per score for NumPy
+    # temporaries and allocator overhead.
+    max_pairs = (max_working_memory_mb * 1024 * 1024) // 10
+    effective_query_batch_size = min(query_batch_size, len(normalised_predicted_vectors))
+    effective_candidate_batch_size = min(
+        candidate_batch_size,
+        len(normalised_candidate_vectors),
+        max(1, max_pairs // max(1, effective_query_batch_size)),
+    )
+    if effective_query_batch_size * effective_candidate_batch_size > max_pairs:
+        effective_query_batch_size = max(1, max_pairs // effective_candidate_batch_size)
+
+    ranks = np.empty(len(normalised_predicted_vectors), dtype=np.int64)
+    candidate_count = len(normalised_candidate_vectors)
+    for query_start in range(0, len(normalised_predicted_vectors), effective_query_batch_size):
+        query_stop = min(query_start + effective_query_batch_size, len(normalised_predicted_vectors))
+        query_batch = normalised_predicted_vectors[query_start:query_stop]
+        target_indices = true_candidate_indices[query_start:query_stop]
+        target_vectors = normalised_candidate_vectors[target_indices]
+        # Compute target scores separately, then explicitly exclude each true
+        # candidate below. This avoids numerical self-comparison artefacts.
+        target_scores = np.einsum("ij,ij->i", query_batch, target_vectors)
+        greater_count = np.zeros(len(query_batch), dtype=np.int64)
+        tied_before_count = np.zeros(len(query_batch), dtype=np.int64)
+
+        for candidate_start in range(0, candidate_count, effective_candidate_batch_size):
+            candidate_stop = min(candidate_start + effective_candidate_batch_size, candidate_count)
+            score_tile = query_batch @ normalised_candidate_vectors[candidate_start:candidate_stop].T
+            greater = score_tile > (target_scores[:, None] + tie_tolerance)
+            tied_before = np.abs(score_tile - target_scores[:, None]) <= tie_tolerance
+
+            # The true candidate is rank-equivalent to itself, never above or
+            # before itself, even if a BLAS reduction differs by a few ulps.
+            rows_with_true_candidate = np.flatnonzero(
+                (target_indices >= candidate_start) & (target_indices < candidate_stop)
+            )
+            true_positions = target_indices[rows_with_true_candidate] - candidate_start
+            greater[rows_with_true_candidate, true_positions] = False
+            tied_before[rows_with_true_candidate, true_positions] = False
+
+            candidate_indices = np.arange(candidate_start, candidate_stop)
+            tied_before &= candidate_indices[None, :] < target_indices[:, None]
+            greater_count += np.count_nonzero(greater, axis=1)
+            tied_before_count += np.count_nonzero(tied_before, axis=1)
+
+        ranks[query_start:query_stop] = 1 + greater_count + tied_before_count
+    return ranks
+
+
+def calculate_full_ranks(
+    predicted_vectors: np.ndarray,
+    true_song_ids: Iterable[str],
+    candidate_vectors: np.ndarray,
+    candidate_song_ids: Iterable[str],
+    *,
+    query_batch_size: int = DEFAULT_FULL_RANK_QUERY_BATCH_SIZE,
+    candidate_batch_size: int = DEFAULT_FULL_RANK_CANDIDATE_BATCH_SIZE,
+    max_working_memory_mb: int = DEFAULT_FULL_RANK_MAX_WORKING_MEMORY_MB,
+    tie_tolerance: float = 1e-6,
+) -> np.ndarray:
+    """Return each query's exact full-catalogue rank under cosine retrieval.
+
+    The rank is one plus the number of candidates with a materially larger
+    cosine score; ties within ``tie_tolerance`` are ordered by candidate
+    position. This is deterministic and does not allocate a full score matrix.
+    """
+    true_song_ids = np.asarray(list(true_song_ids), dtype=str)
+    candidate_song_ids = np.asarray(list(candidate_song_ids), dtype=str)
+    predicted_vectors = np.asarray(predicted_vectors, dtype=np.float32)
+    candidate_vectors = np.asarray(candidate_vectors, dtype=np.float32)
+    true_candidate_indices = _validate_full_rank_inputs(
+        predicted_vectors, true_song_ids, candidate_vectors, candidate_song_ids,
+    )
+    return _bounded_full_ranks(
+        _normalise(predicted_vectors),
+        true_candidate_indices,
+        _normalise(candidate_vectors),
+        query_batch_size=query_batch_size,
+        candidate_batch_size=candidate_batch_size,
+        max_working_memory_mb=max_working_memory_mb,
+        tie_tolerance=tie_tolerance,
+    )
+
+
 def evaluate_retrieval(
     predicted_vectors: np.ndarray,
     true_song_ids: Iterable[str],
     candidate_vectors: np.ndarray,
     candidate_song_ids: Iterable[str],
     k_values: Iterable[int] = DEFAULT_K_VALUES,
+    calculate_full_mrr: bool = False,
+    full_rank_query_batch_size: int = DEFAULT_FULL_RANK_QUERY_BATCH_SIZE,
+    full_rank_candidate_batch_size: int = DEFAULT_FULL_RANK_CANDIDATE_BATCH_SIZE,
+    full_rank_max_working_memory_mb: int = DEFAULT_FULL_RANK_MAX_WORKING_MEMORY_MB,
 ) -> tuple[dict, pd.DataFrame, np.ndarray]:
     """Evaluate held-out description queries against a song catalogue.
 
@@ -121,6 +264,28 @@ def evaluate_retrieval(
     })
     for position in range(max_k):
         details[f"retrieved_{position + 1}_song_id"] = retrieved_ids[:, position]
+    if calculate_full_mrr:
+        true_candidate_indices = _validate_full_rank_inputs(
+            predicted_vectors, true_song_ids, candidate_vectors, candidate_song_ids,
+        )
+        full_ranks = _bounded_full_ranks(
+            predicted_vectors,
+            true_candidate_indices,
+            normalised_candidate_vectors,
+            query_batch_size=full_rank_query_batch_size,
+            candidate_batch_size=full_rank_candidate_batch_size,
+            max_working_memory_mb=full_rank_max_working_memory_mb,
+            tie_tolerance=1e-6,
+        )
+        details["full_rank"] = full_ranks
+        metrics["full_ranking"] = {
+            "mrr": float(np.mean(1.0 / full_ranks)),
+            "mean_rank": float(np.mean(full_ranks)),
+            "median_rank": float(np.median(full_ranks)),
+            "max_rank": int(np.max(full_ranks)),
+            "tie_break_policy": "candidate_index_within_cosine_tolerance",
+            "tie_tolerance": 1e-6,
+        }
     # The position axis mirrors retrieved_1_song_id through retrieved_10_song_id
     # in ``details``. On a catalogue smaller than ten songs it is shorter.
     return metrics, details, candidate_vectors[retrieved_indices]
