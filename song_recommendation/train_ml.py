@@ -93,76 +93,65 @@ DESCRIPTION_TEMPLATES = (
 )
 TEMPLATE_COUNT = len(DESCRIPTION_TEMPLATES)
 EMBEDDING_CACHE_SCHEMA_VERSION = 1
-NUMERIC_BIN_COUNT = 8
-# Bins are [0.000, 0.125), ..., [0.875, 1.000]. The final bin includes one.
+NUMERIC_BIN_COUNT = 5
+# Bins are [0.000, 0.200), ..., [0.800, 1.000]. The final bin includes one.
 NUMERIC_BIN_UPPER_BOUNDS = tuple(index / NUMERIC_BIN_COUNT for index in range(1, NUMERIC_BIN_COUNT))
 NUMERIC_BIN_CENTERS = tuple((index + 0.5) / NUMERIC_BIN_COUNT for index in range(NUMERIC_BIN_COUNT))
 NUMERIC_LANGUAGE = {
     "dance": (
-        ("still", "non-danceable"), ("barely rhythmic", "reserved"),
-        ("lightly rhythmic", "subtle"), ("gently grooving", "easy-moving"),
-        ("moderately danceable", "rhythmic"), ("danceable", "floor-ready"),
-        ("highly danceable", "propulsive"), ("club-driven", "irresistibly danceable"),
+        ("still", "non-danceable"), ("lightly rhythmic", "restrained"),
+        ("moderately rhythmic", "grooving"), ("danceable", "floor-ready"),
+        ("highly danceable", "club-driven"),
     ),
     "acoustic": (
-        ("fully electronic", "synthetic"), ("strongly electronic", "machine-led"),
-        ("mostly electronic", "processed"), ("slightly electronic", "hybrid"),
-        ("mixed acoustic-electronic", "balanced"), ("slightly acoustic", "organic-leaning"),
-        ("acoustic", "natural"), ("fully acoustic", "unplugged"),
+        ("fully electronic", "synthetic"), ("mostly electronic", "processed"),
+        ("mixed acoustic-electronic", "balanced"), ("acoustic-leaning", "organic"),
+        ("fully acoustic", "unplugged"),
     ),
     "aggressive": (
-        ("gentle", "soft-spoken"), ("mild", "unforced"),
-        ("restrained", "measured"), ("assertive", "driven"),
-        ("forceful", "hard-hitting"), ("fierce", "confrontational"),
-        ("intense", "volatile"), ("ferocious", "maximal"),
+        ("gentle", "soft-spoken"), ("reserved", "mild"),
+        ("assertive", "driven"), ("fierce", "forceful"),
+        ("ferocious", "intense"),
     ),
     "electronic": (
-        ("acoustic", "organic"), ("strongly acoustic", "non-electronic"),
-        ("mostly organic", "lightly synthetic"), ("slightly electronic", "hybrid"),
-        ("mixed-media", "balanced"), ("electronic", "synth-accented"),
-        ("strongly electronic", "synth-led"), ("fully electronic", "digital"),
+        ("acoustic", "organic"), ("acoustic-leaning", "mostly organic"),
+        ("mixed-media", "hybrid"), ("electronic", "synth-led"),
+        ("fully electronic", "digital"),
     ),
     "happy": (
-        ("deeply somber", "gloomy"), ("very unhappy", "bleak"),
-        ("melancholic", "downcast"), ("mildly unhappy", "subdued"),
-        ("mildly happy", "pleasant"), ("cheerful", "upbeat"),
-        ("joyful", "buoyant"), ("euphoric", "exuberant"),
+        ("deeply somber", "gloomy"), ("subdued", "downcast"),
+        ("emotionally neutral", "balanced"), ("cheerful", "upbeat"),
+        ("euphoric", "joyful"),
     ),
     "party": (
-        ("solitary", "inward-looking"), ("private", "low-key"),
-        ("reserved", "uncelebratory"), ("casual", "gently social"),
-        ("sociable", "gathering-friendly"), ("party-ready", "festive"),
-        ("celebratory", "crowd-pleasing"), ("dancefloor-ready", "full-on party"),
+        ("solitary", "private"), ("low-key", "reserved"),
+        ("sociable", "gathering-friendly"), ("festive", "party-ready"),
+        ("energetic and hyped", "dancefloor-grooving"),
     ),
     "relaxed": (
-        ("tense", "restless"), ("uneasy", "wired"),
-        ("alert", "brisk"), ("slightly taut", "active"),
-        ("even-paced", "balanced"), ("easygoing", "settled"),
-        ("relaxed", "laid-back"), ("serene", "deeply soothing"),
+        ("tense", "restless"), ("alert", "brisk"),
+        ("even-paced", "balanced"), ("relaxed", "laid-back"),
+        ("serene", "soothing"),
     ),
     "sad": (
-        ("joyful", "hopeful"), ("lighthearted", "bright"),
-        ("only faintly sad", "reflective"), ("slightly wistful", "pensive"),
-        ("mildly sad", "melancholy"), ("sorrowful", "yearning"),
-        ("heartbroken", "deeply mournful"), ("devastated", "grief-stricken"),
+        ("joyful", "hopeful"), ("faintly sad", "reflective"),
+        ("pensive", "melancholy"), ("sorrowful", "yearning"),
+        ("devastated", "grief-stricken"),
     ),
     "timbre": (
-        ("very dark", "shadowy"), ("dark", "muted"),
-        ("dusky", "low-lit"), ("warm-dark", "soft-edged"),
-        ("tonally balanced", "neutral"), ("gently bright", "clear"),
-        ("bright", "shimmering"), ("brilliant", "sparkling"),
+        ("dark", "shadowy"), ("dusky", "warm-dark"),
+        ("tonally balanced", "neutral"), ("bright", "shimmering"),
+        ("brilliant", "sparkling"),
     ),
     "tonal": (
         ("atonal", "dissonant"), ("harmonically unsettled", "angular"),
-        ("loosely tonal", "ambiguous"), ("tonally flexible", "mixed-harmony"),
-        ("moderately tonal", "balanced"), ("harmonically grounded", "consonant"),
-        ("tonal", "melodically clear"), ("highly consonant", "melody-led"),
+        ("mixed-harmony", "tonally flexible"), ("tonal", "consonant"),
+        ("highly consonant", "melody-led"),
     ),
     "voice": (
-        ("instrumental", "voiceless"), ("nearly instrumental", "sparsely vocal"),
-        ("lightly vocal", "voice-sparing"), ("partly vocal", "instrument-led"),
-        ("balanced vocal-instrumental", "mixed-voice"), ("vocal-leaning", "sung"),
-        ("vocal", "voice-forward"), ("vocal-led", "voice-dominant"),
+        ("instrumental", "voiceless"), ("sparsely vocal", "instrument-led"),
+        ("balanced vocal-instrumental", "both voice and instrument"), ("vocal", "sung"),
+        ("vocal-led", "acapella"),
     ),
 }
 
@@ -319,7 +308,7 @@ def build_manual_song_description_comparison(
 
 
 def make_target_vectors(data: pd.DataFrame, train_ids: pd.Index) -> tuple[pd.DataFrame, dict]:
-    """Build 105D targets: eight-bin numeric one-hots plus categoricals."""
+    """Build categorical retrieval targets using the configured numeric bins."""
     if train_ids.empty:
         raise ValueError("At least one training song is required to create target vectors.")
     numeric_blocks = []
@@ -341,7 +330,7 @@ def make_target_vectors(data: pd.DataFrame, train_ids: pd.Index) -> tuple[pd.Dat
         unexpected_levels = sorted(set(canonical_values) - set(levels))
         if unexpected_levels:
             raise ValueError(
-                f"{column} contains values outside the fixed Experiment 5 schema: {unexpected_levels}."
+                f"{column} contains values outside the fixed categorical schema: {unexpected_levels}."
             )
         category_levels[column] = levels
         encoded = pd.get_dummies(canonical_values, prefix=column, dtype=float)
@@ -373,7 +362,7 @@ def load_song_data(csv_path: str | None = None) -> pd.DataFrame:
 
 
 def build_model(input_dimensions: int, category_levels: dict[str, list[str]]) -> Model:
-    """Build a 105D retrieval vector from CORAL and categorical heads."""
+    """Build a retrieval vector from CORAL numeric and categorical heads."""
     inputs = Input(shape=(input_dimensions,), name="sentence_embedding")
     # A shared trunk maps a 384D sentence embedding to fourteen semantic
     # decisions. Numeric heads are rank-consistent CORAL thresholds, converted
@@ -405,7 +394,7 @@ def build_model(input_dimensions: int, category_levels: dict[str, list[str]]) ->
 
 
 def build_cumulative_output_model(retrieval_model: Model) -> Model:
-    """Expose the persisted model's 77D CORAL cumulative probabilities."""
+    """Expose the persisted model's numeric CORAL cumulative probabilities."""
     cumulative_heads = [
         retrieval_model.get_layer(f"{column}_coral_cumulative").output
         for column in NUMERIC_COLUMNS
@@ -420,7 +409,7 @@ def build_cumulative_output_model(retrieval_model: Model) -> Model:
 def class_probabilities_to_expected_vectors(
     vectors: np.ndarray, *, category_levels: dict[str, list[str]], bin_centers: tuple[float, ...] = NUMERIC_BIN_CENTERS,
 ) -> np.ndarray:
-    """Convert 105D retrieval vectors into 28D expected-value diagnostics."""
+    """Convert retrieval class probabilities into expected-value diagnostics."""
     vectors = np.asarray(vectors, dtype=np.float32)
     expected_width = len(NUMERIC_COLUMNS) * NUMERIC_BIN_COUNT + sum(
         len(category_levels[column]) for column in CATEGORICAL_COLUMNS
@@ -440,7 +429,7 @@ def class_probabilities_to_expected_vectors(
 
 
 def class_probabilities_to_cumulative_vectors(vectors: np.ndarray) -> np.ndarray:
-    """Derive the 77D CORAL threshold representation from 105D classes."""
+    """Derive the numeric CORAL threshold representation from class probabilities."""
     vectors = np.asarray(vectors, dtype=np.float32)
     expected_width = len(NUMERIC_COLUMNS) * NUMERIC_BIN_COUNT + sum(
         len(FIXED_CATEGORY_LEVELS[column]) for column in CATEGORICAL_COLUMNS
@@ -475,7 +464,7 @@ def _regression_metrics(true_values: np.ndarray, predicted_values: np.ndarray) -
 def _per_feature_regression_metrics(
     true_values: np.ndarray, predicted_values: np.ndarray,
 ) -> dict[str, dict[str, float | None]]:
-    """Return continuous metrics separately for every Experiment 5 numeric feature."""
+    """Return continuous metrics separately for every numeric feature."""
     if true_values.shape != predicted_values.shape or true_values.shape[-1] != len(NUMERIC_COLUMNS):
         raise ValueError("Per-feature numeric metrics require aligned matrices with one column per numeric feature.")
     return {
@@ -772,7 +761,7 @@ def train_and_evaluate(
         class_probabilities_to_cumulative_vectors(predictions), cumulative_predictions, atol=1e-5,
     ):
         raise AssertionError("CORAL cumulative outputs do not round-trip through class probabilities.")
-    # Experiment 5 deliberately uses a held-out-only candidate catalogue.
+    # The experiment deliberately uses a held-out-only candidate catalogue.
     # Training-song vectors therefore cannot be retrieved for test queries.
     test_candidate_vectors = targets.loc[test_song_ids]
     metrics, details, top_retrieved_vectors = evaluate_retrieval(
@@ -795,14 +784,23 @@ def train_and_evaluate(
         "loss": "equal_feature_coral_categorical_loss",
         "head_sizes": list(head_sizes),
         "output_dimensions": int(sum(head_sizes)),
-        "retrieval_representation": "105D class probabilities converted from CORAL numerics plus categorical softmax heads",
+        "retrieval_representation": (
+            f"{sum(head_sizes)}D class probabilities converted from CORAL numerics "
+            "plus categorical softmax heads"
+        ),
         "coral_thresholds_per_numeric_feature": NUMERIC_BIN_COUNT - 1,
         "coral_cumulative_dimensions": len(NUMERIC_COLUMNS) * (NUMERIC_BIN_COUNT - 1),
         "expected_value_dimensions": len(NUMERIC_COLUMNS) + sum(categorical_sizes),
         "representation_artifacts": {
-            "retrieval_class_probabilities": "evaluation_*_vectors.npy (105D)",
-            "coral_cumulative_numeric": "evaluation_*_cumulative_vectors.npy (77D)",
-            "expected_value_with_categories": "evaluation_*_expected_vectors_28d.npy (28D)",
+            "retrieval_class_probabilities": f"evaluation_*_vectors.npy ({sum(head_sizes)}D)",
+            "coral_cumulative_numeric": (
+                "evaluation_*_cumulative_vectors.npy "
+                f"({len(NUMERIC_COLUMNS) * (NUMERIC_BIN_COUNT - 1)}D)"
+            ),
+            "expected_value_with_categories": (
+                "evaluation_*_expected_vectors_28d.npy "
+                f"({len(NUMERIC_COLUMNS) + sum(categorical_sizes)}D)"
+            ),
         },
         "candidate_catalogue": "test_only",
         "embedding_cache": embedding_cache,
@@ -897,7 +895,7 @@ def persist_artifacts(
         "top_retrieved_expected": "evaluation_top_10_predicted_test_expected_vectors_28d.npy",
     }
     if set(representation_vectors) != set(representation_filenames):
-        raise ValueError("Experiment 5 representation artifacts are incomplete.")
+        raise ValueError("Required representation artifacts are incomplete.")
     for representation_name, filename in representation_filenames.items():
         representation_path = metric_path.parent / filename
         np.save(representation_path, np.asarray(representation_vectors[representation_name], dtype=np.float32))
