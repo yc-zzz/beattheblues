@@ -53,6 +53,8 @@ This project originally began as a software engineering project. Its focus was t
 These experiments were run via Google Cloud Run. 
 
 ## Running Experiments 
+The outputs of @song_data_retrieval.py can be found via this link: https://drive.google.com/file/d/1eL04SZ5D0Op8t_WEChYwoTnfzIzMSlbe/view?usp=sharing. This was obtained via a public data dump on the AcousticBrainz website (https://data.metabrainz.org/pub/musicbrainz/acousticbrainz/dumps/acousticbrainz-highlevel-json-20220623/). 
+
 Retrain with a reproducible 80/20 song split and evaluate the held-out
 descriptions with:
 
