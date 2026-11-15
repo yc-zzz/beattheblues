@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {API_URL} from '../config';
 import './playlist.css';
 import youtubelogo from '../pics/youtube_logo.png';
 import spotifylogo from '../pics/spotify.png';
@@ -11,7 +12,7 @@ const Playlist = () => {
 
   const fetch_playlist = async () => {
     try {
-      const response = await fetch(`https://beattheblues.onrender.com/playlist?user=${username}`);
+      const response = await fetch(`${API_URL}/playlist?user=${username}`);
       const data = await response.json();
       set_songs(data);
     } 
@@ -25,7 +26,7 @@ const Playlist = () => {
 
   const delete_song = async (id: number) => {
     try {
-      await fetch(`https://beattheblues.onrender.com/playlist/${id}`, 
+      await fetch(`${API_URL}/playlist/${id}`, 
       {
         method: 'DELETE',
       });

@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {API_URL} from '../config';
 import './signinform.css';
 import {GoogleLogin} from '@react-oauth/google';
 import profilepng from '../pics/person.png'
@@ -19,7 +20,7 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
   const login_handle = async(e:React.FormEvent)=>{
     e.preventDefault(); //apparently a good habit, used to stop refreshes when form submits
     try {
-      const response = await fetch('https://beattheblues.onrender.com/login', {//might take up to 50 seconds for render to respond cuz of free web service
+      const response = await fetch(`${API_URL}/login`, {//might take up to 50 seconds for render to respond cuz of free web service
         method: 'POST',
         headers: {'Content-Type': 'application/json'}, 
         body: JSON.stringify({username, password}),
@@ -42,7 +43,7 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
   const reg_handle = async(e:React.FormEvent)=>{
     e.preventDefault();
     try {
-      const response = await fetch('https://beattheblues.onrender.com/register', {//same as login, might need to wait
+      const response = await fetch(`${API_URL}/register`, {//same as login, might need to wait
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({username: username_reg, email: email_reg, password: pass_reg}),
@@ -112,7 +113,7 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
         </form>
         <GoogleLogin 
         onSuccess={(response) => {
-          fetch('https://beattheblues.onrender.com/auth/google',{
+          fetch(`${API_URL}/auth/google`,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body: JSON.stringify({token: response.credential}),

@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import {API_URL, RECO_API_URL} from './config';
 import './App.css';
 import defaultprofile from './pics/profile-icon-png-898.png';
 import youtubelogo from './pics/youtube_logo.png';
@@ -47,9 +48,9 @@ function App() {
     let payload = {query}; 
 
     if (search_mode){ //altermnate netween the two search mode
-      url = 'https://beattheblues-reco.onrender.com/search';
+      url = `${RECO_API_URL}/search`;
     } else {
-      url = 'https://beattheblues-reco.onrender.com/recommend';
+      url = `${RECO_API_URL}/recommend`;
     }
 
     try {
@@ -95,7 +96,7 @@ function App() {
 
   const playlist_add = async () => {
     try {
-      const response = await fetch('https://beattheblues.onrender.com/playlist', {
+      const response = await fetch(`${API_URL}/playlist`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({username, song: recommendation})
@@ -221,7 +222,7 @@ function App() {
             <div className='button-wrapper'>
               <MyButton onClick={async() => {
                 try{
-                  const response = await fetch('https://beattheblues.onrender.com/random');
+                  const response = await fetch(`${API_URL}/random`);
                   const data = await response.json();
                   set_reco(data.recommendation);
                   set_reco_validity(true);
