@@ -58,4 +58,4 @@ RUN for f in ml_vector_reduction.keras model_metadata.json; do \
 # One worker process keeps a single copy of the model in memory. Threads let
 # that worker serve several requests at once. --timeout 0 lets Cloud Run's own
 # request timeout apply instead of gunicorn's.
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 master_app:master_app
+CMD ["sh", "-c", "exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 master_app:master_app"]

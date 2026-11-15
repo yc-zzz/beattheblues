@@ -9,6 +9,8 @@
 #     --substitutions=_IMAGE=REGION-docker.pkg.dev/PROJECT_ID/beattheblues/reco-api
 steps:
   - name: gcr.io/cloud-builders/docker
+    # BuildKit is needed so deploy/reco-api.Dockerfile.dockerignore is used.
+    env: ["DOCKER_BUILDKIT=1"]
     args: ["build", "-f", "deploy/reco-api.Dockerfile", "-t", "${_IMAGE}", "."]
 images:
   - "${_IMAGE}"

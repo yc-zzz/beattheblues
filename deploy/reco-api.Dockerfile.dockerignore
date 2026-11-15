@@ -1,0 +1,31 @@
+# Ignore rules for deploy/reco-api.Dockerfile only. Docker (BuildKit) uses a
+# "<Dockerfile name>.dockerignore" file next to the Dockerfile instead of the
+# root .dockerignore, which belongs to the training image and excludes the
+# web server code and the model files that this image needs.
+
+.git/
+.gitignore
+.venv/
+venv/
+**/__pycache__/
+**/*.py[cod]
+
+# Secrets must come from Secret Manager at runtime, never from the image.
+.env
+.env.*
+**/.env
+*.pem
+*.key
+
+# Not used by the recommendation API
+my-frontend/
+my-backend/
+docs/
+song_recommendation/raw_data/
+song_recommendation/evaluation_results/
+**/embedding_cache/
+**/*.npy
+**/*.csv
+**/*.ipynb
+**/evaluation_*.json
+.DS_Store
