@@ -1,0 +1,36 @@
+# Files NOT uploaded to Cloud Build when building the recommendation API.
+# When this file exists, gcloud ignores .gitignore, so everything that must
+# stay private or is not needed by the server is listed here explicitly.
+# Important: the trained model files ARE uploaded on purpose, even though git
+# ignores them, because the image needs them.
+
+.git/
+.gitignore
+.gcloudignore
+
+# Secrets. Never upload these.
+.env
+**/.env
+*.pem
+*service-account*.json
+
+# Local tooling and caches
+.venv/
+**/__pycache__/
+**/node_modules/
+.DS_Store
+
+# Parts of the repo the recommendation API does not use
+my-frontend/
+my-backend/
+docs/
+
+# Training data and evaluation outputs (large, offline only)
+song_recommendation/raw_data/
+song_recommendation/evaluation_results/
+embedding_cache/
+**/embedding_cache/
+*.npy
+*.csv
+*.ipynb
+evaluation_*.json

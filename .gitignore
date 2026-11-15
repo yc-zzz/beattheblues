@@ -7,3 +7,5 @@ song_recommendation/raw_data/*.zip
 *.npy
 *.csv
 *.json
+# Trained model weights. Too large for git; kept in the model bucket instead.
+*.keras
