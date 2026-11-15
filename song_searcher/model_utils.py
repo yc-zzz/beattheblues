@@ -5,15 +5,25 @@ from sqlalchemy import create_engine
 
 #import credentials 
 def import_credentials(): 
-    load_dotenv()
-    try: 
-        db_user = os.environ["DB_USER"]
-        db_password = os.environ["DB_PASSWORD"]
-        db_host = os.environ["DB_HOST"]
-        db_name = os.environ["DB_NAME"]
-    except Exception as e: 
-        raise RuntimeError("Missing environment variable: ", e)
+    """Create a database engine for the Neon Postgres database.
 
-    db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}?sslmode=require"
+    Uses DB_USER, DB_PASSWORD, DB_HOST and DB_NAME when all four are set (the
+    original Render setup). Otherwise falls back to NEON_CONNECTION_STRING,
+    the single variable the recommender already uses, so a new deployment only
+    needs to configure one database secret.
+    """
+    load_dotenv()
+    parts = ("DB_USER", "DB_PASSWORD", "DB_HOST", "DB_NAME")
+    if all(os.environ.get(name) for name in parts):
+        db_user, db_password, db_host, db_name = (os.environ[name] for name in parts)
+        db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}?sslmode=require"
+    elif os.environ.get("NEON_CONNECTION_STRING"):
+        db_url = os.environ["NEON_CONNECTION_STRING"]
+    else:
+        raise RuntimeError(
+            "Missing database settings: set NEON_CONNECTION_STRING, "
+            "or all of DB_USER, DB_PASSWORD, DB_HOST and DB_NAME."
+        )
+
     engine = create_engine(db_url)
     return engine
