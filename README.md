@@ -3,14 +3,19 @@ beat the blues𝄞 is a simple web app where you can escape the monotonous recom
 Simply search a word or phrase, about anything. Be it your feelings, the weather, or gibberish, and there will always be a song recommended to you!
 
 ## Deployment
-Frontend: Vercel
-
-Backend: Render
-
-Database: Neon
+| Part | Folder | Hosted on |
+|---|---|---|
+| Frontend (React) | `my-frontend/` | Vercel |
+| Accounts, playlists, random song (Node/Express) | `my-backend/` | Render |
+| Search, recommendations, personality test (Flask, `master_app.py`) | repo root | Google Cloud Run (moving from Render) |
+| Database | n/a | Neon Postgres |
 
 This is a full stack web app that is deployed, and thus can be accessed through the web link. No need to run locally!
-As the web services are free tier, the deployed backend may take up to 50 seconds to spin up. Please be patient with our website!
+The backends scale to zero when nobody is using them, so the first request after a quiet spell may take up to a minute while they start. Please be patient with our website!
+
+How to deploy the recommendation API to Cloud Run, step by step: [docs/deploy-cloud-run.md](docs/deploy-cloud-run.md).
+
+The frontend reads its backend URLs from `REACT_APP_API_URL` and `REACT_APP_RECO_API_URL` (see `my-frontend/src/config.ts`). Set them in Vercel and redeploy to point the site at a different backend.
 
 ## ML Implementation (Documentation)
 
