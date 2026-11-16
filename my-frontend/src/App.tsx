@@ -45,7 +45,7 @@ function App() {
 
   const search_handle = async() => {
     let url = '';
-    let payload = {query}; 
+    const payload = {query};
 
     if (search_mode){ //altermnate netween the two search mode
       url = `${RECO_API_URL}/search`;
@@ -57,7 +57,7 @@ function App() {
       const response = await fetch(url, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query})
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
@@ -174,23 +174,18 @@ function App() {
   return (
     <Router>
       <div className='top-bar'>
-        <a href="#" className="top-link" onClick={(e) => {
+        {/* Real links: logged-in users follow them as normal, otherwise we stop the navigation and show the sign-in popup */}
+        <a href="/playlist" className="top-link" onClick={(e) => {
           if (!logged_in) {
             e.preventDefault(); //good habit to prevent accidental refreshe
             set_popup(true);
-          } 
-          else {
-            window.location.href = '/playlist';
           }
         }}>Playlist</a>
 
-        <a href="#" className="top-link" onClick={(e) => {
+        <a href="/profile" className="top-link" onClick={(e) => {
           if (!logged_in) {
             e.preventDefault();
             set_popup(true);
-          } 
-          else {
-            window.location.href = '/profile'; 
           }
         }}>Personality</a>
 
@@ -239,28 +234,27 @@ function App() {
                   return(
                   <p>
                     Searching for exact songs. {''}
-                    <a href='#' style={{color: '#CBC3E3'}} onClick={(e) => {
-                      e.preventDefault();
+                    {/* A button, not a link: it changes the mode instead of going to another page */}
+                    <button type='button' className='link-button' onClick={() => {
                       set_search_mode(false);
                       set_reco('');
                       set_reco_validity(false);
                     }}>
                       Switch to Recommendation Mode
-                    </a>
+                    </button>
                   </p>
                   );
                 } else{
                   return (
                     <p>
                       Recommending obscure songs. {''}
-                      <a href='#' style={{color: '#CBC3E3'}} onClick={(e) => {
-                        e.preventDefault();
+                      <button type='button' className='link-button' onClick={() => {
                         set_search_mode(true);
                         set_reco('');
                         set_reco_validity(false);
                       }}>
                         Switch to Search Mode
-                      </a>
+                      </button>
                     </p>
                   );
                 }

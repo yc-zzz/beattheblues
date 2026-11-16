@@ -154,3 +154,14 @@ h2 {
   vertical-align: middle;
   margin-left: -2rem;
 }
+/* A <button> that looks like the inline text links it replaced
+   (used for "Switch to ... Mode", which changes state rather than navigating). */
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #CBC3E3;
+  text-decoration: underline;
+  cursor: pointer;
+}
