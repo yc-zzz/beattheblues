@@ -1,4 +1,5 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
+import {API_URL} from '../config';
 import './playlist.css';
 import youtubelogo from '../pics/youtube_logo.png';
 import spotifylogo from '../pics/spotify.png';
@@ -9,9 +10,11 @@ const Playlist = () => {
   const [songs, set_songs] = useState<any[]>([]);
   const [loading, set_loading] = useState(true); //helps to track when data is still being loaded
 
-  const fetch_playlist = async () => {
+  // useCallback keeps the same function between renders (until username changes),
+  // so listing it as a useEffect dependency does not refetch on every render.
+  const fetch_playlist = useCallback(async () => {
     try {
-      const response = await fetch(`https://beattheblues.onrender.com/playlist?user=${username}`);
+      const response = await fetch(`${API_URL}/playlist?user=${username}`);
       const data = await response.json();
       set_songs(data);
     } 
@@ -21,11 +24,11 @@ const Playlist = () => {
     finally { //turns off the loading state, note that this is regardless of success or failure
       set_loading(false);
     }
-  };
+  }, [username]);
 
   const delete_song = async (id: number) => {
     try {
-      await fetch(`https://beattheblues.onrender.com/playlist/${id}`, 
+      await fetch(`${API_URL}/playlist/${id}`, 
       {
         method: 'DELETE',
       });
@@ -46,7 +49,7 @@ const Playlist = () => {
     else {
       set_loading(false);
     }
-  }, [username]);
+  }, [username, fetch_playlist]);
 
   if (!username) {
     return <p style={{textAlign: 'center'}}>Please log in to view your playlist and join the party!</p>;

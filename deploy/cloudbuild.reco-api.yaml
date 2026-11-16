@@ -1,0 +1,19 @@
+# Cloud Build recipe for the recommendation API image.
+#
+# Why this file exists: `gcloud run deploy --source .` can only build a file
+# named Dockerfile at the repository root, and that file is already the
+# training job. This recipe builds deploy/reco-api.Dockerfile instead.
+#
+# Run from the repository root (see docs/deploy-cloud-run.md):
+#   gcloud builds submit --config deploy/cloudbuild.reco-api.yaml \
+#     --substitutions=_IMAGE=REGION-docker.pkg.dev/PROJECT_ID/beattheblues/reco-api
+steps:
+  - name: gcr.io/cloud-builders/docker
+    # BuildKit is needed so deploy/reco-api.Dockerfile.dockerignore is used.
+    env: ["DOCKER_BUILDKIT=1"]
+    args: ["build", "-f", "deploy/reco-api.Dockerfile", "-t", "${_IMAGE}", "."]
+images:
+  - "${_IMAGE}"
+# The default machine is enough. The free allowance is 2,500 build-minutes a
+# month on e2-standard-2, and one build takes roughly 10 minutes.
+timeout: 1800s

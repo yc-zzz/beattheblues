@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {API_URL, RECO_API_URL} from '../config';
 import './profile.css'
 import youtubelogo from '../pics/youtube_logo.png';
 import spotifylogo from '../pics/spotify.png';
@@ -18,7 +19,7 @@ export default function Personality() {
   }, []);
 
   useEffect(() => {
-    fetch('https://beattheblues-reco.onrender.com/personality',{
+    fetch(`${RECO_API_URL}/personality`,{
       method:'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action: 'display'})
@@ -44,7 +45,7 @@ export default function Personality() {
   };
 
   const handle_submit = async () => { //handles submission of personality answer to backend
-    const res = await fetch('https://beattheblues-reco.onrender.com/personality',{
+    const res = await fetch(`${RECO_API_URL}/personality`,{
       method:'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action: 'description', answers:answers, username: username})
@@ -55,7 +56,7 @@ export default function Personality() {
   };
 
   const handle_get_playlist = async () => {//gets playlist, surprise
-    const res = await fetch('https://beattheblues-reco.onrender.com/personality',{
+    const res = await fetch(`${RECO_API_URL}/personality`,{
       method:'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action: 'playlist', username: username})
@@ -66,7 +67,7 @@ export default function Personality() {
 
   const playlist_add = async (song: {name: string; artist: string}) => {
     try {
-      const response = await fetch('https://beattheblues.onrender.com/playlist', {
+      const response = await fetch(`${API_URL}/playlist`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({username, song: `${song.name} by ${song.artist}`})
