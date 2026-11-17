@@ -6,14 +6,14 @@
    ========================================================================== */
 :root {
   /* Backgrounds, darkest to lightest */
-  --bg: #0b0d12;          /* page background */
-  --surface: #12151e;     /* cards */
-  --surface-2: #151925;   /* inputs, toggles */
-  --surface-3: #1c2232;   /* pills, icon tiles */
+  --bg: #002444;          /* page background */
+  --surface: #062d52;     /* cards */
+  --surface-2: #08335c;   /* inputs, toggles */
+  --surface-3: #0e3d69;   /* pills, icon tiles */
 
   /* Lines */
-  --border: #1e2230;
-  --border-strong: #2e3446;
+  --border: #12406c;
+  --border-strong: #24557f;
 
   /* Text */
   --text: #eceef3;        /* main text */

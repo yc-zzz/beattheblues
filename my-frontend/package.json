@@ -10,7 +10,6 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.126",
-    "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -45,6 +44,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react": "^19.3.0",
     "@types/react-router-dom": "^5.3.3"
   }
 }
