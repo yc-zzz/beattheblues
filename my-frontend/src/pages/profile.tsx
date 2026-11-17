@@ -1,9 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {API_URL, RECO_API_URL} from '../config';
 import './profile.css'
-import youtubelogo from '../pics/youtube_logo.png';
-import spotifylogo from '../pics/spotify.png';
-import googlelogo from '../pics/google.png';
+import SongLinks from '../components/SongLinks';
 
 export default function Personality() {
   const [questions, set_questions] = useState([]); //questions obtained from backend
@@ -82,65 +80,61 @@ export default function Personality() {
   };
 
   return (
-    <div className='profile-page'>
-      <h3>
-        Find out your personality!
-      </h3>
-      <a href="/" className="home-link">Return to Home</a>
+    <main className='page profile-page'>
+      <a href="/" className="back-link">← Back to home</a>
+      <div className='page-heading'>
+        <h1 className='page-title'>Find out your personality</h1>
+        <p className='page-subtitle'>Answer a few questions and get a playlist that fits you.</p>
+      </div>
+
       {submitted === false &&  questions.length > 0 && (//not submitted -> show the forms
-        <form className='personality-form'>
+        <form className='personality-form' onSubmit={(e) => {
+          e.preventDefault();
+          handle_submit();
+        }}>
           {questions.map((q:any, index:number) => (//goes through the questions in the list
-            <div className='question-block' key = {q.id}>
-              <label>{q.question}</label>
+            <div className='field' key = {q.id}>
+              <label htmlFor={`question-${index}`}>{q.question}</label>
               <textarea
+              id={`question-${index}`}
+              rows={2}
               value = {answers[index]}
               onChange={(e) => handle_input_change(index, e.target.value)}
               />
             </div>
           ))}
-          <button className='login-button' type="button" onClick={handle_submit}>What's my personality?</button>
+          <button className='btn btn-primary' type="submit">What's my personality?</button>
         </form>
       )}
 
       {submitted === true && (
-        <div className='results-block'>
-          <h2>Your personality:</h2>
-          <p>{description}</p>
-          <button className='login-button' onClick={handle_get_playlist}> Get playlist</button>
-        </div>
+        <section className='card results-block'>
+          <h2 className='section-title'>Your personality</h2>
+          <p className='personality-description'>{description}</p>
+          <button type='button' className='btn btn-primary' onClick={handle_get_playlist}>Get my playlist</button>
+        </section>
       )}
       
       {playlist.length >0 && (
-      <div className='playlist-block'>
-        <h2>recommended songs</h2>
+      <section className='playlist-block'>
+        <h2 className='section-title'>Recommended songs</h2>
           <ul className='song-list'>
             {playlist.map((song, idx) => {
               const name = song?.name || ''; // Asign to empty string first if song is not ready to prevent crashing
               const artist = song?.artist || '';
-              const full_name = encodeURI(`${name} by ${artist}`);
               return (
-              <li key={idx} className="song-row">
-                <span>{song.name} by {song.artist}</span>
-                <div className="search-buttons">
-                  <a href={`https://www.youtube.com/results?search_query=${full_name}`} target="_blank" rel="noopener noreferrer">
-                  <img src={youtubelogo} alt="YouTube" className="search-icon" />
-                  </a>
-                  <a href={`https://open.spotify.com/search/${encodeURI(`${name} ${artist}`)}`} target="_blank" rel="noopener noreferrer">
-                  <img src={spotifylogo} alt="Spotify" className="search-icon" />
-                  </a>
-                  <a href={`https://www.google.com/search?q=${full_name}`} target="_blank" rel="noopener noreferrer">
-                  <img src={googlelogo} alt="Google" className="search-icon" />
-                  </a>
-                  <button className="add-button" onClick={() => playlist_add(song)}>
-                    Add to Playlist
-                  </button>
-                </div>
+              <li key={idx} className="card song-card">
+                <span className='song-name'>{name} <span className='song-artist'>by {artist}</span></span>
+                <SongLinks song={`${name} by ${artist}`} />
+                <button type='button' className="btn btn-outline" onClick={() => playlist_add(song)}>
+                  + Add to playlist
+                </button>
               </li>
               );
             })}
           </ul>
-      </div>
+      </section>
       )}
-    </div>
+    </main>
   );
 }
