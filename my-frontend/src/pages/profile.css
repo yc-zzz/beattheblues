@@ -1,18 +1,46 @@
-.profile-page {
-  max-width: 50rem;
-  margin: auto;
+.personality-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
-.question-block {
-  margin-bottom: 1.2rem;
+/* Let the answer boxes grow taller but not wider */
+.personality-form textarea {
+  resize: vertical;
 }
 
-textarea {
-  width: 100%;
-  height: 50px;
-  margin-top: 0.5rem;
+.personality-form .btn {
+  align-self: flex-start; /* don't stretch the button across the form */
 }
 
-.results-block, .playlist-block {
-  margin-top: 2rem;
+.section-title {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.results-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.personality-description {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+}
+
+.playlist-block {
+  margin-top: 32px;
+}
+
+.song-artist {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+@media (max-width: 640px) {
+  .personality-form .btn,
+  .results-block .btn {
+    align-self: stretch; /* full-width buttons are easier to tap on a phone */
+  }
 }

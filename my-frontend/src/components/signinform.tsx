@@ -2,9 +2,6 @@ import React, {useState} from 'react';
 import {API_URL} from '../config';
 import './signinform.css';
 import {GoogleLogin} from '@react-oauth/google';
-import profilepng from '../pics/person.png'
-import emailpng from '../pics/email.png'
-import passpng from '../pics/password.png'
 
 export default function SigninForm({when_closed, when_logged_in}: {when_closed: () => void; when_logged_in: (username: string) => void}) {
   const [username, set_user] = useState('');
@@ -20,7 +17,7 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
   const login_handle = async(e:React.FormEvent)=>{
     e.preventDefault(); //apparently a good habit, used to stop refreshes when form submits
     try {
-      const response = await fetch(`${API_URL}/login`, {//might take up to 50 seconds for render to respond cuz of free web service
+      const response = await fetch(`${API_URL}/login`, {//might take a few seconds if the backend is waking up
         method: 'POST',
         headers: {'Content-Type': 'application/json'}, 
         body: JSON.stringify({username, password}),
@@ -60,8 +57,8 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
   let popup_form;
   if (register_toggle) { //simple switch mechanism for the form, clicking sign in sets it to false, vice versa for register
     popup_form = (
-      <div>
-        <form onSubmit={(e) => {
+      <>
+        <form className='auth-form' onSubmit={(e) => {
           e.preventDefault();
           const email_regex = /^[\w.-]+@([\w-]+\.)+[\w-]{2,}$/; //did all this just to realise browser already default check for email format lol
           if(!email_regex.test(email_reg)){
@@ -75,64 +72,83 @@ export default function SigninForm({when_closed, when_logged_in}: {when_closed: 
           reg_handle(e);
         }}
         >
-          <h5>Register</h5> 
-          <div className='input'>
-            <img src={profilepng} alt=""/>
-            <input type="text" placeholder="Username" value={username_reg} onChange={(e) => set_username_reg(e.target.value)} /> 
+          <h2 className='auth-title'>Create an account</h2>
+          {/* htmlFor + id link each label to its box: tapping the label focuses the box */}
+          <div className='field'>
+            <label htmlFor='reg-username'>Username</label>
+            <input id='reg-username' type="text" autoComplete='username' value={username_reg} onChange={(e) => set_username_reg(e.target.value)} />
           </div>
-          <div className='input'>
-            <img src={emailpng} alt=""/>
-            <input type="email" placeholder="Email" value={email_reg} onChange={(e) => set_email_reg(e.target.value)} />
+          <div className='field'>
+            <label htmlFor='reg-email'>Email</label>
+            <input id='reg-email' type="email" autoComplete='email' value={email_reg} onChange={(e) => set_email_reg(e.target.value)} />
           </div>
-          <div className='input'>
-            <img src={passpng} alt=""/>
-            <input type="password" placeholder="Password" value={pass_reg} onChange={(e) => set_pass_reg(e.target.value)} />
+          <div className='field'>
+            <label htmlFor='reg-password'>Password</label>
+            <input id='reg-password' type="password" autoComplete='new-password' value={pass_reg} onChange={(e) => set_pass_reg(e.target.value)} />
           </div>
-          <button className='login-button' type="submit">Sign Up</button>
-          {message_reg && <p>{message_reg}</p>}
+          <button className='btn btn-primary' type="submit">Sign up</button>
+          {message_reg && <p className='auth-message'>{message_reg}</p>}
         </form>
-        <p>Already have an account? <button className='login-button' onClick={() => set_register_toggle(false)}>Sign In</button></p>
-      </div>
+        <p className='auth-switch'>
+          Already have an account?{' '}
+          <button type='button' className='text-button' onClick={() => set_register_toggle(false)}>Sign in</button>
+        </p>
+      </>
     );
   } 
   else {
     popup_form = (
-      <div>
-        <form onSubmit={login_handle}>
-          <h5>Sign In</h5>
-          <div className='input'>
-            <img src={profilepng} alt=""/>
-            <input type="text" placeholder="Username" value={username} onChange={(e) => set_user(e.target.value)} />
+      <>
+        <form className='auth-form' onSubmit={login_handle}>
+          <h2 className='auth-title'>Sign in</h2>
+          <div className='field'>
+            <label htmlFor='login-username'>Username</label>
+            <input id='login-username' type="text" autoComplete='username' value={username} onChange={(e) => set_user(e.target.value)} />
           </div>
-          <div className='input'>
-            <img src={passpng} alt=""/>
-            <input type="password" placeholder="Password" value={password} onChange={(e) => set_pass(e.target.value)} />
+          <div className='field'>
+            <label htmlFor='login-password'>Password</label>
+            <input id='login-password' type="password" autoComplete='current-password' value={password} onChange={(e) => set_pass(e.target.value)} />
           </div>
-          <button className='login-button' type="submit">Sign In</button>
-          {message && <p>{message}</p>}
+          <button className='btn btn-primary' type="submit">Sign in</button>
+          {message && <p className='auth-message'>{message}</p>}
         </form>
-        <GoogleLogin 
-        onSuccess={(response) => {
-          fetch(`${API_URL}/auth/google`,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({token: response.credential}),
-          })
-          .then(response => response.json()) //parse the response jason
-          .then(data => { //the parsed data
-            if(data.success){
-              when_logged_in(data.username);
-            } else{
-              console.error(data.message)
-            }
-          })
-        }} 
-        onError={() => console.error('Login failed')}
-        />
-        <p className='this-is-just-for-this-one-margin'>Don't have an account? <button className='login-button' onClick={() => set_register_toggle(true)}>Register</button></p>
-      </div>
+        <div className='auth-divider'><span>or</span></div>
+        <div className='auth-google'>
+          <GoogleLogin 
+          theme='filled_black'
+          shape='pill'
+          onSuccess={(response) => {
+            fetch(`${API_URL}/auth/google`,{
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({token: response.credential}),
+            })
+            .then(response => response.json()) //parse the response jason
+            .then(data => { //the parsed data
+              if(data.success){
+                when_logged_in(data.username);
+              } else{
+                console.error(data.message)
+              }
+            })
+          }} 
+          onError={() => console.error('Login failed')}
+          />
+        </div>
+        <p className='auth-switch'>
+          Don't have an account?{' '}
+          <button type='button' className='text-button' onClick={() => set_register_toggle(true)}>Register</button>
+        </p>
+      </>
     );
   }
 
-  return <div className="dropdown-menu">{popup_form}</div>;
+  return (
+    <div className="dropdown-menu">
+      <button type='button' className='auth-close' aria-label='Close' onClick={when_closed}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+      {popup_form}
+    </div>
+  );
 }

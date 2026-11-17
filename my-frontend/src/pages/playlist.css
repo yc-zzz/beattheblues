@@ -1,51 +1,67 @@
-body {
+/* Playlist page styles (the personality page reuses some of them too).
+   Every rule starts with a class name, so nothing here can accidentally
+   restyle other pages the way the old "body { padding: 100px }" did. */
+
+.page-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-faint);
+}
+
+.empty-state {
+  color: var(--text-muted);
+}
+
+.song-list {
+  list-style: none;
   margin: 0;
   padding: 0;
-  color:white;
-  padding: 100px;
-  text-align: center;
-  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-h3 {  
-  font-size: 25px;
-  margin-top: 1rem;
-  margin-bottom: 3rem;
-  padding: 0;
-  color:white;
-  text-align: center;
+.song-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius);
 }
 
-.title-block{
-  text-align: 'center';
-  padding: '2rem';
+.song-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.home-link {
-  position: fixed;
-  top: 2rem;
-  left: 2rem;
-  font-weight: bold;
-  font-size: 15px;
-  color: #00d084;
-}
-
-.home-link:hover {
-  color: #00b574;
-  text-decoration: underline;
-}
-
-.song-list{
-  list-style: none;
-  line-height: 3rem;
+.song-name {
+  flex-grow: 1;
+  min-width: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .delete-button {
-  margin-left: 1rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 5px;
-  background: #ff4d4d;
-  color: white;
-  border: none;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--danger);
+}
+
+.delete-button:hover {
+  border-color: var(--danger);
 }

@@ -1,167 +1,326 @@
-body {
+.site-header {
+  position: relative; /* lets the sign-in popup and phone menu position themselves under it */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--text);
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link {
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* The ☰ button. Hidden on wide screens; the media query below shows it on phones. */
+.menu-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+/* The small panel under the header: sign-in form, or "Welcome, name" */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px); /* just below the header */
+  right: 32px;
+  z-index: 10;           /* draw on top of the page content */
+  width: 300px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.dropdown-welcome {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+
+/* ==========================================================================
+   Home page
+   ========================================================================== */
+.home-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding-top: 88px;
+  text-align: center;
+}
+
+.eyebrow {
   margin: 0;
-  padding: 0;
-  color:white;
-  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
-h1 {
-  font-size: 105px;
-  text-align: center;
-  margin-top: 10rem;
-  margin-bottom: 0.1rem;
+/* clamp(min, preferred, max): the title grows with the screen width (8vw = 8%
+   of it) but never goes below 40px or above 88px. No media query needed. */
+.hero-title {
+  font-size: clamp(40px, 8vw, 88px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
 }
 
-h2 {
-  font-size: 25px;
-  margin: 0;
-  padding: 0;
-  color:white;
-  text-align: center;
-  font-family: 'Courier New', 'Courier New', Courier, monospace;
+/* Two buttons sitting in one rounded "track" */
+.mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
 }
 
-.my-button {
-  padding: 0.6rem 1.2rem;
-  font-size: 16px;
-  border-radius: 20px;
-  background-color: #00d084;
-  color: black;
-  cursor: pointer;
+.mode-toggle button {
+  min-height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.my-button:hover {
-  background-color: #00b574; 
+/* [aria-pressed='true'] matches the button whose aria-pressed is true, so the
+   style follows the React state without needing an extra class name. */
+.mode-toggle button[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
 }
 
-.button-wrapper {
-  text-align: center;
+.search-bar {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  padding: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
 }
 
-.search-wrapper {
-  position: relative;
-  text-align: center;
-  margin: 1rem;
+/* :focus-within = "when anything inside me has focus" (here, the input) */
+.search-bar:focus-within {
+  border-color: var(--accent);
 }
 
 .search-input {
-  padding: 0.6rem 1rem;
-  width: 60%;
-  max-width: 400px;
-  font-size: 1rem;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+  flex-grow: 1;
+  min-width: 0; /* lets the input shrink on narrow screens instead of overflowing */
+  min-height: 48px;
+  padding: 0 14px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px; /* 16px or more stops iPhones zooming in when you tap the box */
 }
 
-.top-bar {
-  position: absolute;
-  top: 1rem;
-  right: 1.5rem;
+.search-input::placeholder {
+  color: var(--text-faint);
+}
+
+.search-submit {
   display: flex;
   align-items: center;
-  gap: 1rem; 
-}
-
-.top-link {
-  color: white;
-  font-weight: bold;
-  font-size: 15px;
-}
-
-.top-link:hover {
-  color: lightgrey;
-  text-decoration: underline;
-}
- 
-.profile-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid white;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 3em;
-  right: 0.5rem;
-  background-color: white;
-  color: black;
-  padding: 1rem;
-  padding-top: 0.1rem;
-  border-radius: 10px;
-  width: 190px;
-}
-
-.dropdown-menu input {
-  display: block;
-  margin: 0.4rem;
-  margin-left: 0;
-  margin-top: 0.1rem;
-}
-
-.reco-result {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 1.2rem;
-}
-
-.search-buttons {
-  display: inline-flex;
   justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-left: 1rem;
-}
-
-.search-icon {
-  width: 40px;
-  height: auto;
-  transition: transform 0.2s ease;
-  cursor: pointer;
-  vertical-align: middle
-}
-
-.search-icon:hover {
-  transform: scale(1.1);
-}
-
-.add-button-wrapper {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
-.add-button{
-  border-radius: 8px;
-  font-family: 'roboto';
-  font-size: 15px;
-}
-
-.switch-mode {
-  position: fixed;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-}
-
-.search-enter {
-  position:absolute;
-  cursor: pointer;
-  top: 25%;
-  width: 20px;
-  height: auto;
-  vertical-align: middle;
-  margin-left: -2rem;
-}
-/* A <button> that looks like the inline text links it replaced
-   (used for "Switch to ... Mode", which changes state rather than navigating). */
-.link-button {
-  background: none;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
   border: none;
-  padding: 0;
-  font: inherit;
-  color: #CBC3E3;
-  text-decoration: underline;
-  cursor: pointer;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.search-submit:hover {
+  background: var(--accent-hover);
+}
+
+.random-button {
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.random-button:hover {
+  border-color: var(--text-faint);
+  color: var(--text);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.reco-message {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* The result card */
+.reco-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  margin-top: 8px;
+  text-align: left;
+}
+
+.reco-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.reco-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  color: var(--accent);
+}
+
+.reco-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reco-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.reco-title {
+  font-size: 22px;
+  overflow-wrap: anywhere; /* very long titles wrap instead of widening the card */
+}
+
+.reco-artist {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.site-footer {
+  padding: 24px 16px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* ==========================================================================
+   Phones and narrow windows (640px wide or less)
+   A media query applies the rules inside it only when the condition is true.
+   ========================================================================== */
+@media (max-width: 640px) {
+  .site-header {
+    padding: 12px 16px;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  /* The nav becomes a panel that drops down under the header... */
+  .site-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px 16px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ...and only shows when React adds the "open" class. */
+  .site-nav.open {
+    display: flex;
+  }
+
+  .nav-link {
+    padding: 12px 14px;
+  }
+
+  /* The popup stretches across the screen with a 16px gap each side. */
+  .dropdown-menu {
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+
+  .home-page {
+    padding-top: 40px;
+    gap: 20px;
+  }
+
+  .mode-toggle {
+    width: 100%;
+  }
+
+  .random-button {
+    width: 100%;
+  }
 }

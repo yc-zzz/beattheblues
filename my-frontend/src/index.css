@@ -1,14 +1,226 @@
+/* ==========================================================================
+   Design tokens
+   Every colour, radius and font lives here once, as a CSS "custom property"
+   (a variable). Other CSS files use them with var(--name), so changing the
+   look later means editing one line here instead of hunting through files.
+   ========================================================================== */
+:root {
+  /* Backgrounds, darkest to lightest */
+  --bg: #002444;          /* page background */
+  --surface: #062d52;     /* cards */
+  --surface-2: #08335c;   /* inputs, toggles */
+  --surface-3: #0e3d69;   /* pills, icon tiles */
+
+  /* Lines */
+  --border: #12406c;
+  --border-strong: #24557f;
+
+  /* Text */
+  --text: #eceef3;        /* main text */
+  --text-muted: #b4bacb;  /* secondary text */
+  --text-faint: #8a91a6;  /* labels, captions */
+
+  /* Accent (your original mint green, slightly brightened for dark mode) */
+  --accent: #3ee0a0;
+  --accent-hover: #7af0c2;
+  --on-accent: #07140e;   /* text placed ON the accent colour */
+  --danger: #ff8a8a;
+
+  /* Shape */
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* Type */
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Space Grotesk', var(--font-body);
+}
+
+/* ==========================================================================
+   Base styles: sensible defaults for plain HTML elements
+   ========================================================================== */
+
+/* Make width/height include padding and border, so sizes add up predictably. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
-  background-color:#002444;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+/* Buttons and inputs don't inherit the page font by default; make them. */
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--accent);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* A visible outline when someone moves through the page with the Tab key. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* ==========================================================================
+   Shared building blocks, reused on every page
+   ========================================================================== */
+
+/* Stack header, page and footer vertically, and stretch to the full screen
+   height so the footer sits at the bottom even on short pages. */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Centres page content and caps its width so lines don't get too long. */
+.page {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+  flex-grow: 1; /* take up the spare height, pushing the footer down */
+}
+
+.page-title {
+  font-size: 32px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+}
+
+/* Buttons. Use with a variant: className="btn btn-primary" */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px; /* 44px is the smallest comfortable size to tap on a phone */
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  color: var(--on-accent);
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-outline:hover {
+  border-color: var(--text-faint);
+  color: var(--text);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btn-ghost:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Text inputs */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.field label {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* Hides text visually but keeps it for screen readers (e.g. input labels). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
