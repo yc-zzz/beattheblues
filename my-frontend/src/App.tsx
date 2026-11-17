@@ -1,39 +1,49 @@
 import React, {useState, useEffect} from 'react';
 import {API_URL, RECO_API_URL} from './config';
 import './App.css';
-import defaultprofile from './pics/profile-icon-png-898.png';
-import youtubelogo from './pics/youtube_logo.png';
-import spotifylogo from './pics/spotify.png';
-import googlelogo from './pics/google.png';
-import searchicon from './pics/search.png';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import SigninForm from './components/signinform';
+import SongLinks from './components/SongLinks';
 import Profile from './pages/profile';
 import Playlist from './pages/playlist';
 import '../node_modules/react-tooltip/dist/react-tooltip.css'
 import {Tooltip} from 'react-tooltip'
 //putting it here before I lose track
-//h1: homepage logo h2: words below the log h3: first line in playlist and profile h5: register/login in the popup 
+//h1: page title on each page, h2: section headings, h3: song title in the result card
 
-function MyButton({onClick}:{onClick: () => void }) {
+function MyButton({onClick, disabled}:{onClick: () => void; disabled: boolean}) {
   return <button 
-  className='my-button' 
+  type='button'
+  className='btn random-button' 
   onClick={onClick}
+  disabled={disabled}
   data-tooltip-id="my-tooltip"
   data-tooltip-content="Get a completely random song!"
-  data-tooltip-place="right">
-    I'm feeling adventurous!
+  data-tooltip-place="bottom">
+    Surprise me with a random song
     </button>;    
+}
+
+// Splits "Title by Artist" into its two parts, so the card can show them on
+// separate lines. Uses the LAST " by " in case the title itself contains one.
+function split_song(song: string) {
+  const by_index = song.lastIndexOf(' by ');
+  if (by_index <= 0) {
+    return {title: song, artist: ''};
+  }
+  return {title: song.slice(0, by_index), artist: song.slice(by_index + 4)};
 }
 
 function App() {
   const [popup, set_popup] = useState(false); //basically login tab
+  const [menu_open, set_menu_open] = useState(false); //the nav menu on phones
   const [logged_in, set_logged_in] = useState(false);
   const [username, set_user] = useState('');
   const [query, set_query] = useState('');
   const [recommendation, set_reco] = useState('');
   const [valid_reco, set_reco_validity] = useState(false); //this is added later to control when the search icons show up
   const [search_mode, set_search_mode] = useState(false); //alternate search mode between recomm and search
+  const [is_loading, set_loading] = useState(false); //true while waiting for the backend
 
   useEffect( () => {
     const stored_user = localStorage.getItem('username');
@@ -53,6 +63,7 @@ function App() {
       url = `${RECO_API_URL}/recommend`;
     }
 
+    set_loading(true);
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -78,7 +89,32 @@ function App() {
     } catch (err) {
       console.error(err);
       set_reco('Cannot fetch recommendation, try again later.');
+      set_reco_validity(false);
+    } finally {
+      set_loading(false);
     }
+  };
+
+  const random_handle = async() => {
+    set_loading(true);
+    try{
+      const response = await fetch(`${API_URL}/random`);
+      const data = await response.json();
+      set_reco(data.recommendation);
+      set_reco_validity(true);
+    } catch(e){
+      console.error(e);
+      set_reco("Error fetching random song right now");
+      set_reco_validity(false);
+    } finally {
+      set_loading(false);
+    }
+  };
+
+  const switch_mode = (to_search: boolean) => {
+    set_search_mode(to_search);
+    set_reco('');
+    set_reco_validity(false);
   };
 
   const login_success = (user: string)=>{
@@ -110,6 +146,15 @@ function App() {
     }
   };
 
+  // Playlist and Personality need an account: if logged out, stop the link and open the sign-in popup instead
+  const guard_link = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!logged_in) {
+      e.preventDefault(); //good habit to prevent accidental refreshe
+      set_menu_open(false);
+      set_popup(true);
+    }
+  };
+
   let popup_content;
   if (popup && !logged_in) {
     popup_content = (
@@ -121,151 +166,120 @@ function App() {
   } else if (popup && logged_in) {
     popup_content = (
       <div className='dropdown-menu'>
-        <p style={{fontSize:'18px', marginBottom:'0.5rem'}}>Welcome, {username}!</p>
-        <button className='login-button' onClick={logout_handle}>Log out</button>
+        <p className='dropdown-welcome'>Welcome, {username}!</p>
+        <button type='button' className='btn btn-outline' onClick={logout_handle}>Log out</button>
       </div>
     );
   }
 
-  const spotify_name = recommendation.replace(' by ', ' '); // this is just for spotify, cuz spotify prefer song name only
-
   let reco_stuffs;
-  if (recommendation) {
+  if (is_loading) {
+    reco_stuffs = <p className='reco-message'>Finding something for you...</p>;
+  } else if (recommendation && valid_reco) { //when recommendation is legit, show the full card
+    const {title, artist} = split_song(recommendation);
     reco_stuffs = (
-      <div className="recommendation-result">
-        <p>{recommendation}</p>
-        {valid_reco && (//when recommendation is legit, icons popup
-          <div>
-            <div className="search-buttons">
-              <a href={`https://www.youtube.com/results?search_query=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
-              <img src={youtubelogo} alt="YouTube" className="search-icon" />
-              </a>
-              <a 
-              href={`https://open.spotify.com/search/${encodeURI(spotify_name)}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content="Spotify availability is subject to artist!"
-              data-tooltip-place="bottom">
-              <img src={spotifylogo} alt="Spotify" className="search-icon" />
-              </a>
-              <a href={`https://www.google.com/search?q=${encodeURI(recommendation)}`} target="_blank" rel="noopener noreferrer">
-              <img src={googlelogo} alt="Google" className="search-icon" />
-              </a>
-            </div>
-            {logged_in && (
-              <div className="add-button-wrapper">
-                <button className='add-button' onClick={playlist_add}>Add to playlist</button>
-              </div>
-            )}
+      <section className='card reco-card' aria-label='Recommendation'>
+        <div className='reco-header'>
+          <div className='reco-art' aria-hidden='true'>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l11-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="17" cy="16" r="3"></circle></svg>
           </div>
+          <div className='reco-text'>
+            <span className='reco-label'>Your recommendation</span>
+            <h3 className='reco-title'>{title}</h3>
+            {artist && <span className='reco-artist'>by {artist}</span>}
+          </div>
+        </div>
+        <SongLinks song={recommendation} />
+        {logged_in && (
+          <button type='button' className='btn btn-primary' onClick={playlist_add}>+ Add to playlist</button>
         )}
-      </div>
+      </section>
     );
+  } else if (recommendation) { //an error or "try again" message: plain text, no card
+    reco_stuffs = <p className='reco-message'>{recommendation}</p>;
   }
 
   let placeholder = "";
   if (search_mode){
     placeholder = "Search for a song or an artist...";
   } else {
-    placeholder = "Type a keyword, like a genre, weather or mood..."
+    placeholder = "A genre, a mood, the weather..."
   }
 
   return (
     <Router>
-      <div className='top-bar'>
-        {/* Real links: logged-in users follow them as normal, otherwise we stop the navigation and show the sign-in popup */}
-        <a href="/playlist" className="top-link" onClick={(e) => {
-          if (!logged_in) {
-            e.preventDefault(); //good habit to prevent accidental refreshe
-            set_popup(true);
-          }
-        }}>Playlist</a>
+      <header className='site-header'>
+        <a href="/" className='brand'>beat the blues&#119070;</a>
 
-        <a href="/profile" className="top-link" onClick={(e) => {
-          if (!logged_in) {
-            e.preventDefault();
-            set_popup(true);
-          }
-        }}>Personality</a>
+        {/* Only visible on small screens (see App.css): opens and closes the nav */}
+        <button
+          type='button'
+          className='menu-toggle'
+          aria-label={menu_open ? 'Close menu' : 'Open menu'}
+          aria-expanded={menu_open}
+          onClick={() => set_menu_open(prev => !prev)}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+        </button>
 
-        <img src={defaultprofile} className='profile-icon' alt='Profile' onClick={() => set_popup(prev => !prev)} />
+        <nav className={menu_open ? 'site-nav open' : 'site-nav'}>
+          <a href="/playlist" className="nav-link" onClick={guard_link}>Playlist</a>
+          <a href="/profile" className="nav-link" onClick={guard_link}>Personality</a>
+          <button type='button' className='btn btn-outline' onClick={() => {
+            set_menu_open(false);
+            set_popup(prev => !prev);
+          }}>
+            {logged_in ? username : 'Sign in'}
+          </button>
+        </nav>
         {popup_content}
-      </div>
+      </header>
 
       <Routes>
         <Route path="/" element={
-          <div className="home-page">
-            <h1>beat the blues&#119070;</h1>
-            <h2>What are you vibing to today?</h2>
-            <div className='search-wrapper'>
+          <main className="page home-page">
+            <p className='eyebrow'>Music you haven't heard yet</p>
+            <h1 className='hero-title'>What are you vibing to today?</h1>
+
+            {/* Two buttons acting as one switch. aria-pressed tells screen readers which one is on. */}
+            <div className='mode-toggle' role='group' aria-label='Mode'>
+              <button type='button' aria-pressed={!search_mode} onClick={() => switch_mode(false)}>
+                Discover obscure
+              </button>
+              <button type='button' aria-pressed={search_mode} onClick={() => switch_mode(true)}>
+                Search exact song
+              </button>
+            </div>
+
+            {/* A real <form>: pressing Enter or tapping the button both submit it */}
+            <form className='search-bar' onSubmit={e => {
+              e.preventDefault();
+              search_handle();
+            }}>
+              <label htmlFor='search-input' className='visually-hidden'>Search</label>
               <input
+                id='search-input'
                 type="text"
                 placeholder={placeholder}
                 className="search-input"
                 value={query}
                 onChange={e => set_query(e.target.value)}
-                onKeyDown={e => {if (e.key === 'Enter') search_handle();}}
               /> 
-              <img
-              src={searchicon}
-              alt="Search"
-              className="search-enter"
-              onClick={search_handle}
-              />
-            </div>
-            <div className='button-wrapper'>
-              <MyButton onClick={async() => {
-                try{
-                  const response = await fetch(`${API_URL}/random`);
-                  const data = await response.json();
-                  set_reco(data.recommendation);
-                  set_reco_validity(true);
-                } catch(e){
-                  console.error(e);
-                  set_reco("Error fetching random song right now");
-                  set_reco_validity(false);
-                }
-                }} />
-            </div> 
-            <div className='switch-mode'> 
-            {(() => {
-                if (search_mode){
-                  return(
-                  <p>
-                    Searching for exact songs. {''}
-                    {/* A button, not a link: it changes the mode instead of going to another page */}
-                    <button type='button' className='link-button' onClick={() => {
-                      set_search_mode(false);
-                      set_reco('');
-                      set_reco_validity(false);
-                    }}>
-                      Switch to Recommendation Mode
-                    </button>
-                  </p>
-                  );
-                } else{
-                  return (
-                    <p>
-                      Recommending obscure songs. {''}
-                      <button type='button' className='link-button' onClick={() => {
-                        set_search_mode(true);
-                        set_reco('');
-                        set_reco_validity(false);
-                      }}>
-                        Switch to Search Mode
-                      </button>
-                    </p>
-                  );
-                }
-              })()}
-              </div>
+              <button type='submit' className='search-submit' aria-label='Search' disabled={is_loading}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+              </button>
+            </form>
+
+            <MyButton onClick={random_handle} disabled={is_loading} />
+
             {reco_stuffs}
-          </div>
+          </main>
         } />
         <Route path="/profile" element={<Profile />} />
         <Route path="/playlist" element={<Playlist />} />
       </Routes>
+
+      <footer className='site-footer'>beat the blues&#119070; · obscure songs, recommended</footer>
       <Tooltip id="my-tooltip" />
     </Router>
   );
